@@ -18,9 +18,11 @@ class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        guard let cell = tableview.dequeueReusableCell(withIdentifier: "CustomTableViewCellIdentifier") else {
+        guard let cell = tableview.dequeueReusableCell(withIdentifier: "CustomTableViewCellIdentifier") as? CustomTableViewCell else {
             return UITableViewCell()
         }
+        
+        cell.controller = self
         
         return cell
     }

@@ -64,18 +64,48 @@ class VJPlayVideoView: UIView {
     
     fileprivate var playBtn : UIButton! = {
         let btn = UIButton(type: .custom)
-        btn.setImage(UIImage(systemName: "play.fill"), for: .normal)
-        btn.setImage(UIImage(systemName: "play.fill"), for: .highlighted)
-        btn.setImage(UIImage(systemName: "pause.fill"), for: .selected)
+        if #available(iOS 13.0, *) {
+            btn.setImage(UIImage(systemName: "play.fill"), for: .normal)
+        } else {
+            // Fallback on earlier versions
+        }
+        if #available(iOS 13.0, *) {
+            btn.setImage(UIImage(systemName: "play.fill"), for: .highlighted)
+        } else {
+            // Fallback on earlier versions
+        }
+        if #available(iOS 13.0, *) {
+            btn.setImage(UIImage(systemName: "pause.fill"), for: .selected)
+        } else {
+            // Fallback on earlier versions
+        }
         btn.sizeToFit()
         btn.addTarget(self, action: #selector(togglePlay), for: .touchUpInside)
         return btn
     }()
     
-    fileprivate var buttons : Array<String>!
+    fileprivate var callBack : ( _ index : Int)-> Void = {_ in}
+    fileprivate var buttons : Array<UIButton>? = nil
+    fileprivate var imageStrings : Array<String>? {
+        didSet(newValue) {
+            guard let imageNames = newValue  else {
+                return
+            }
+            for i in 0..<imageNames.count {
+                let str = imageNames[i]
+                let btn = UIButton(type: .custom)
+                btn.setImage(UIImage.init(named: str), for: .normal)
+                btn.setImage(UIImage.init(named: str), for: .highlighted)
+                btn.tag = 2222 + i
+                btn.addTarget(self, action: #selector(btnAction(_:)), for: .touchUpInside)
+                buttons?.append(btn)
+            }
+        }
+    }
     
     override init(frame: CGRect) {
         super.init(frame : frame)
+        self.isHidden = false
         setUpAssets()
     }
     
@@ -83,9 +113,16 @@ class VJPlayVideoView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    convenience init(frame: CGRect,btns: Array<String>) {
-        self.init(frame: frame)
-        buttons = btns
+    /// 初始化方法
+    /// - Parameters:
+    ///   - controller: 控制器
+    ///   - view: 需要需要返回到的视图，点击处
+    ///   - btns: 其他按钮的资源图片名称
+    ///   - closure: 按钮点击回调
+    convenience init(controller : UIViewController?,view : UIView?,btns: Array<String>,closure : @escaping (_ index : Int) -> Void) {
+        self.init(frame: controller?.view.frame ?? UIScreen.main.bounds)
+        imageStrings = btns
+        controller?.view.addSubview(self)
         setUpAssets()
     }
     
@@ -114,6 +151,10 @@ class VJPlayVideoView: UIView {
         NotificationCenter.default.removeObserver(self)
     }
     
+    @objc func btnAction(_ sender:UIButton) {
+        
+    }
+    
     private func setUpAssets() {
         // 设置静音模式下播放
 //        let avSession = AVAudioSession.sharedInstance()
@@ -134,7 +175,6 @@ class VJPlayVideoView: UIView {
     }
     */
 }
-
 
 extension VJPlayVideoView {
     // MARK: - Asset Property Handling
@@ -310,6 +350,13 @@ extension VJPlayVideoView {
 }
 
 extension VJPlayVideoView {
+    func showVideo(_ url : URL) {
+        isHidden = false
+        playVideo(url)
+    }
+}
+
+extension VJPlayVideoView {
     
     @objc func playVideo(_ url : URL){
 
@@ -327,7 +374,7 @@ extension VJPlayVideoView {
         player = AVPlayer(playerItem: playerItem)
         playView = AVPlayerLayer(player: player)
         playView.videoGravity = .resizeAspect // 填充方式 充满屏幕  拉伸
-        playView.frame = self.bounds
+        playView.frame = UIScreen.main.bounds
         self.layer.addSublayer(playView)
 //        nextPlayer()
 //        player.play()

@@ -81,7 +81,6 @@ class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
         frame = UIScreen.main.bounds
         backgroundView.frame = bounds
         gustureView.frame = bounds
-        playerView.frame = bounds
         surfaceDisplay.frame = CGRect(x: 0, y:bounds.height - displayHeight - UIWindow.safeBottom, width: bounds.width, height: displayHeight)
     }
     
@@ -110,6 +109,19 @@ class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
         surfaceDisplay.playBtn.addTarget(self, action: #selector(togglePlay), for: .touchUpInside)
         addGusture()
         setUpAssets()
+        NotificationCenter.default.addObserver(self, selector: #selector(deviceOrientationDidChangeNotificationAction(_:)), name: UIApplication.didChangeStatusBarOrientationNotification, object: nil)
+        if #available(iOS 13, *) {
+            // 缺失iOS13以上监听屏幕旋转的方法
+        } else {
+        }
+    }
+    
+    @objc func deviceOrientationDidChangeNotificationAction(_ noti: NSNotification) {
+        if UIWindow.isLandscape() {
+            playerView.frame = CGRect(x: 0, y: 0, width: bounds.height, height: bounds.width)
+        } else {
+            playerView.frame = CGRect(x: 0, y: 0, width: bounds.height, height: bounds.width)
+        }
     }
     
     func addGusture() {

@@ -8,7 +8,7 @@
 import UIKit
 import AVFoundation
 
-class VJPlayVideoView: UIView {
+class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
 
     // MARK: Properties
     let timeRemainingFormatter: DateComponentsFormatter = {
@@ -38,11 +38,28 @@ class VJPlayVideoView: UIView {
     private static let toolViewHeight : CGFloat = 50    // toolBar 高度
     
     // MARK: UI
-    fileprivate var  imageView : UIImageView!
-    fileprivate var  playView  : AVPlayerLayer!
-    fileprivate var  player    : AVPlayer!
-    fileprivate var playerItem : AVPlayerItem!
-    fileprivate var url        : URL!
+    fileprivate var imageFrame  : CGRect! = nil
+    fileprivate var player      : AVPlayer!
+    fileprivate var playerItem  : AVPlayerItem!
+    fileprivate var url         : URL!
+    fileprivate var playerView  : PlayerView = {
+        let aView = PlayerView(frame: UIScreen.main.bounds)
+        aView.backgroundColor = UIColor.clear
+        return aView
+    }()
+    fileprivate var backgroundView : UIView = {
+        let aView = UIView(frame: UIScreen.main.bounds)
+        aView.backgroundColor = UIColor.black
+        aView.alpha = 1
+        return aView
+    }()
+    
+    fileprivate var gustureView : UIView = {
+        let aView = UIView()
+        aView.frame = UIScreen.main.bounds
+        aView.backgroundColor = UIColor.clear
+        return aView
+    }()
     
     fileprivate var timeSlider : UISlider! = {
         let slider  = UISlider()
@@ -122,22 +139,30 @@ class VJPlayVideoView: UIView {
     convenience init(controller : UIViewController?,view : UIView?,btns: Array<String>,closure : @escaping (_ index : Int) -> Void) {
         self.init(frame: controller?.view.frame ?? UIScreen.main.bounds)
         imageStrings = btns
+        let btnFrame = view?.superview?.convert(view!.frame, to: controller?.view)
+        imageFrame = btnFrame
+//        let aview = UIView(frame: imageFrame)
+//        aview.backgroundColor = UIColor.yellow
         controller?.view.addSubview(self)
+        addSubview(backgroundView)
+        addSubview(playerView)
+        addSubview(gustureView)
+        addGusture()
         setUpAssets()
+//        addSubview(aview)
+    }
+    
+    func addGusture() {
+        let panGesture = UIPanGestureRecognizer(target: self, action: #selector(respondsToPanGesture(_:)))
+        panGesture.cancelsTouchesInView = false
+        panGesture.maximumNumberOfTouches = 1
+        gustureView.addGestureRecognizer(panGesture)
     }
     
     override func layoutSubviews() {
         super.layoutSubviews()
-        if imageView != nil{
-            imageView.frame = self.bounds
-            self.insertSubview(imageView, at: 0)
-        }
-        if playView != nil{
-            playView.frame = self.bounds
-            playView.fillMode = .backwards
-            self.layer.insertSublayer(playView, at: 0)
-            playView.frame = self.bounds
-        }
+        backgroundView.frame = bounds
+        gustureView.frame = bounds
         playBtn.frame = CGRect(x: VJPlayVideoView.playLeftSpace, y: bounds.size.height - VJPlayVideoView.bottomHeight, width: VJPlayVideoView.playWidth, height: 44)
         startTimeLabel.frame = CGRect(x: playBtn.frame.origin.x + playBtn.frame.size.width + VJPlayVideoView.playRightSpace, y: bounds.size.height - VJPlayVideoView.bottomHeight , width: VJPlayVideoView.labelWidth, height: 44)
         let timeSliderWidth : CGFloat =  bounds.size.width - (VJPlayVideoView.playLeftSpace * 2 + VJPlayVideoView.playRightSpace + VJPlayVideoView.playWidth  + VJPlayVideoView.labelWidth * 2 + 10)
@@ -147,7 +172,7 @@ class VJPlayVideoView: UIView {
     }
     
     deinit {
-        removePlayer()
+        playerView.removePlayer()
         NotificationCenter.default.removeObserver(self)
     }
     
@@ -159,12 +184,105 @@ class VJPlayVideoView: UIView {
         // 设置静音模式下播放
 //        let avSession = AVAudioSession.sharedInstance()
 //        try! avSession.setCategory(.playback)
-        backgroundColor = UIColor.black
+        backgroundColor = UIColor.clear
         addSubview(timeSlider)
         addSubview(startTimeLabel)
         addSubview(durationLabel)
         addSubview(playBtn)
         clipsToBounds = true
+    }
+    
+    private func showViews(_ show:Bool) {
+        timeSlider.isHidden = !show
+        startTimeLabel.isHidden = !show
+        durationLabel.isHidden = !show
+        playBtn.isHidden = !show
+    }
+    
+    private static var originPoint : CGPoint!
+    private static var  isPortrait : Bool = true // 手势向上
+    @objc func respondsToPanGesture(_ pan:UIPanGestureRecognizer) {
+        
+        let point = pan.location(in: gustureView)
+//        print("x = \(point.x),y = \(point.y)")
+        if pan.state == .began {
+            moveBegan(point)
+        } else if pan.state == .changed {
+            // 开始移动
+            if point.y >  VJPlayVideoView.originPoint.y {
+                VJPlayVideoView.isPortrait = false
+            }
+            if !VJPlayVideoView.isPortrait {
+                
+                let offSetX : CGFloat = VJPlayVideoView.originPoint.x - point.x
+                let offSetY : CGFloat = VJPlayVideoView.originPoint.y - point.y
+//                print(offSetY)
+                let proportion : Double = 1.0 - (abs(offSetY) / bounds.size.height) // 随着y轴变化  x轴不变
+//                print("\(proportion)")
+                playerView.bounds = CGRect(x: 0, y: 0, width:  bounds.size.width * proportion, height: bounds.size.height * proportion)
+                let maxCenterY =  bounds.size.height -  playerView.bounds.size.height * 0.5
+                let centerY = (center.y - offSetY) > maxCenterY ? maxCenterY :  (center.y - offSetY)
+                playerView.center = CGPoint(x: center.x - offSetX, y: centerY)
+//                print("修改前: width : \(bounds.size.width)  , height : \(bounds.size.height)")
+//                print("修改后: width : \(playerView.bounds.size.width)  , height : \(playerView.bounds.size.height)")
+
+            }
+//            print("changed")
+        } else if pan.state == .cancelled || pan.state == .ended || pan.state == .recognized || pan.state == .failed {
+            moveBegan(point) //  VJPlayVideoView.originPoint 可能为空
+            let offSetY : CGFloat = VJPlayVideoView.originPoint.y - point.y
+            let proportion : Double = 1.0 - (abs(offSetY) / bounds.size.height) // 随着y轴变化  x轴不变
+            // 缩放比例大于0.9
+            var isHiddenVideoView : Bool = proportion > 0.9
+            // 结束时比开始点位高 还原
+            if VJPlayVideoView.originPoint.y > point.y {
+                isHiddenVideoView = true
+            }
+            // 比开始点位低 缩小
+            UIView.animate(withDuration: 0.3) {
+                if isHiddenVideoView {
+                    self.playerView.frame = self.frame
+                    self.showViews(true)
+                    self.backgroundView.alpha = 1
+                }else {
+                    print("缩小到视图中")
+                    self.playerView.frame = self.imageFrame
+                }
+            } completion: { _ in
+                VJPlayVideoView.originPoint = nil
+                VJPlayVideoView.isPortrait = true
+                if !isHiddenVideoView {
+                    self.removeAllValues()
+                }
+            }
+//            videoView.center = CGPoint(x: view.center.x, y: view.center.y)
+            print("end")
+        }
+        
+    }
+    
+    private func moveBegan(_ point : CGPoint) {
+        if VJPlayVideoView.originPoint == nil {
+            VJPlayVideoView.originPoint = point
+            showViews(false)
+            playerView.playerLayer.player?.pause()
+        }
+    }
+    
+    private func removeAllValues() {
+//        self.player.removeObserver(playerItemStatusObserver!, forKeyPath: #keyPath(AVPlayer.timeControlStatus))
+//        self.player.removeObserver(playerTimeControlStatusObserver!, forKeyPath: #keyPath(AVPlayer.timeControlStatus))
+        if let timeObserverToken = timeObserverToken {
+            player.removeTimeObserver(timeObserverToken)
+            self.timeObserverToken = nil
+        }
+//        self.playerItemStatusObserver = nil
+//        self.playerTimeControlStatusObserver = nil
+//        self.player = nil
+        self.playerView.removePlayer() // 暂停播放 释放资源
+        self.playerView.removeFromSuperview()
+        self.gustureView.removeFromSuperview()
+        self.removeFromSuperview()
     }
     
     /*
@@ -193,9 +311,7 @@ extension VJPlayVideoView {
                 if self.validateValues(forKeys: assetKeysRequiredToPlay, forAsset: newAsset) {
                     
                     self.setupPlayerObservers()
-
-                    self.playView.player = self.player
-                    
+                    self.playerView.playerLayer.player = self.player
                     self.player.replaceCurrentItem(with: AVPlayerItem(asset: newAsset))
                 }
             }
@@ -229,7 +345,6 @@ extension VJPlayVideoView {
     
     // MARK: - Key-Value Observing
     func setupPlayerObservers() {
-
         playerTimeControlStatusObserver = player.observe(\AVPlayer.timeControlStatus,
                                                          options: [.initial, .new]) { [unowned self] _, _ in
             DispatchQueue.main.async {
@@ -243,6 +358,7 @@ extension VJPlayVideoView {
             let timeElapsed = Float(time.seconds)
             self.timeSlider.value = timeElapsed
             self.startTimeLabel.text = self.createTimeString(time: timeElapsed)
+            print(self.createTimeString(time: timeElapsed))
         }
         
 //        playerItemFastForwardObserver = player.observe(\AVPlayer.currentItem?.canPlayFastForward,
@@ -265,7 +381,6 @@ extension VJPlayVideoView {
 //                self.rewindButton.isEnabled = player.currentItem?.canPlayFastReverse ?? false
 //            }
 //        }
-        
         playerItemStatusObserver = player.observe(\AVPlayer.currentItem?.status, options: [.new, .initial]) { [unowned self] _, _ in
             DispatchQueue.main.async {
                 
@@ -349,56 +464,14 @@ extension VJPlayVideoView {
     }
 }
 
-extension VJPlayVideoView {
-    func showVideo(_ url : URL) {
-        isHidden = false
-        playVideo(url)
-    }
-}
-
-extension VJPlayVideoView {
+extension VJPlayVideoView  {
     
-    @objc func playVideo(_ url : URL){
-
-        self.url = url
-        if playView != nil{
-            playView.isHidden = false
-        }
-        if imageView != nil{
-            imageView.isHidden = true
-        }
-        
-        removePlayer()
-        
+    func showVideo(_ url : URL) {
         playerItem  = AVPlayerItem(url: url )
         player = AVPlayer(playerItem: playerItem)
-        playView = AVPlayerLayer(player: player)
-        playView.videoGravity = .resizeAspect // 填充方式 充满屏幕  拉伸
-        playView.frame = UIScreen.main.bounds
-        self.layer.addSublayer(playView)
-//        nextPlayer()
-//        player.play()
-//        addAVPlayItemKVO(playerItem)
-        
+        playerView.playVideo(player)
         let asset = AVURLAsset(url: url)
-        
         loadPropertyValues(forAsset: asset)
-    }
-    
-    func removePlayer(){
-        if playView != nil{
-            playView.removeAllAnimations()
-            playView.removeFromSuperlayer()
-            playView = nil
-            
-            if player != nil{
-                player = nil
-            }
-        }
-        if imageView != nil{
-            imageView.removeFromSuperview()
-            imageView = nil
-        }
     }
 }
 
@@ -426,9 +499,47 @@ extension VJPlayVideoView {
     func timeSliderDidChange(_ sender : UISlider) {
         
         let newTime = CMTime(seconds: Double(sender.value), preferredTimescale: 600)
+
         player.seek(to: newTime, toleranceBefore: .zero, toleranceAfter: .zero)
     }
 }
 
 
 
+
+/// A simple `UIView` subclass backed by an `AVPlayerLayer` layer.
+class PlayerView: UIView {
+    fileprivate var playerLayer    : AVPlayerLayer!
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        playerLayer.frame = self.bounds
+    }
+    
+    
+    @objc func playVideo(_ player : AVPlayer){
+        removePlayer()
+        playerLayer = AVPlayerLayer(player: player)
+        playerLayer.videoGravity = .resizeAspect // 填充方式 充满屏幕  拉伸
+        playerLayer.frame = self.bounds
+        layer.addSublayer(playerLayer)
+    }
+    
+    func removePlayer(){
+        if playerLayer != nil {
+            playerLayer.player?.pause()
+            playerLayer.removeAllAnimations()
+            playerLayer.removeFromSuperlayer()
+            playerLayer = nil
+        }
+    }
+}

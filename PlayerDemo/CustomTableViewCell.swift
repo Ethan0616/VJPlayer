@@ -9,23 +9,18 @@ import UIKit
 
 @objc
 protocol CustomTableViewCellProtocol : NSObjectProtocol {
-    func imageClicked(_ frame : CGRect)
+    func imageClicked(_ frame: CGRect) ->URL
 }
 
 class CustomTableViewCell: UITableViewCell {
 
     @IBOutlet weak var imageBtn: UIButton!
-    
+    weak var delegate : CustomTableViewCellProtocol?
     // 显示的视图
     weak var controller : UIViewController?
 
-    lazy var videoView : VJPlayVideoView! = {
-        let videoView = VJPlayVideoView(controller: controller, view: imageBtn, btns: ["123"]) { index in
-            print(index)
-        }
-
-        return videoView
-    }()
+    // 核心代码 视频播放器懒加载
+    lazy var videoView : VJPlayVideoView! = nil
     
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -49,13 +44,14 @@ class CustomTableViewCell: UITableViewCell {
     }
     
     @IBAction func imageBtnAction(_ sender: Any) {
-        // 唤起页面
-        
-        print("ViewController delegate")
-//        let path : String = Bundle.main.path(forResource: "1653903243735430", ofType: "mp4") ?? ""
-//        let urlPath = URL.init(fileURLWithPath: path)
-        guard let urlPath =  URL.init(string: "http://vfx.mtime.cn/Video/2019/02/04/mp4/190204084208765161.mp4") else { return }
-        videoView.showVideo(urlPath)
-        
+        // 这部分只是用于演示，当在controller中调用时，需要自定义代理，把URL传入SDK
+        let btnFrame = self.convert(self.imageBtn.frame, to: controller?.view)
+        if let urlPath = delegate?.imageClicked(btnFrame) {
+            videoView = VJPlayVideoView(controller: controller, view: imageBtn, btns: ["123"]) { index in
+                print(index)
+            }
+            // 唤起页面 核心代码
+            videoView.showVideo(urlPath)
+        }
     }
 }

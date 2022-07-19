@@ -45,8 +45,8 @@ extension ViewController: CustomTableViewCellProtocol {
     // cell 点击事件
     func imageClicked(_ frame: CGRect) ->URL {
         print("ViewController delegate")
-        guard let urlPath =  URL.init(string: "") else {
-//        guard let urlPath =  URL.init(string: "http://vfx.mtime.cn/Video/2019/02/04/mp4/190204084208765161.mp4") else {
+//        guard let urlPath =  URL.init(string: "") else {
+        guard let urlPath =  URL.init(string: "http://vfx.mtime.cn/Video/2019/02/04/mp4/190204084208765161.mp4") else {
             let path : String = Bundle.main.path(forResource: "1653903243735430", ofType: "mp4") ?? ""
             let url = URL.init(fileURLWithPath: path)
             return url

@@ -10,6 +10,43 @@ import AVFoundation
 
 class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
 
+    fileprivate var imageFrame  : CGRect! = nil
+    fileprivate var player      : AVPlayer!
+    fileprivate var playerItem  : AVPlayerItem!
+    fileprivate var url         : URL!
+
+    private let displayHeight : CGFloat = 100    // VJSurfaceDisplay 整体视图所占的高度
+    // MARK: UI
+    // 视图顺序，自下而上
+    // 蒙版
+    fileprivate var backgroundView : UIView = {
+        let aView = UIView(frame: UIScreen.main.bounds)
+        aView.backgroundColor = UIColor.black
+        aView.alpha = 1
+        return aView
+    }()
+    // 视频播放器
+    fileprivate var playerView  : VJPlayerView = {
+        let aView = VJPlayerView(frame: UIScreen.main.bounds)
+        aView.backgroundColor = UIColor.clear
+        return aView
+    }()
+    // 手势视图
+    fileprivate var gustureView : UIView = {
+        let aView = UIView()
+        aView.frame = UIScreen.main.bounds
+        aView.backgroundColor = UIColor.clear
+        return aView
+    }()
+    // 顶层按钮 overlayer
+    fileprivate var surfaceDisplay : VJSurfaceDisplay = {
+        let aView = VJSurfaceDisplay(frame: CGRect.zero)
+        
+        return aView
+    }()
+    
+    fileprivate var callBack : ( _ index : Int)-> Void = {_ in}
+    
     // MARK: Properties
     let timeRemainingFormatter: DateComponentsFormatter = {
         let formatter = DateComponentsFormatter()
@@ -29,97 +66,6 @@ class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
     static let playButtonImageName = "PlayButton"
     
     
-    // MARK: layout
-    private static let bottomHeight : CGFloat = 150     // 距离底边距离
-    private static let playLeftSpace: CGFloat = 20      // 播放按钮左侧空间
-    private static let playWidth    : CGFloat = 44      // 播放按钮宽度
-    private static let playRightSpace : CGFloat = 10    // 播放按钮右边空间
-    private static let labelWidth   : CGFloat = 60      // 时间显示的宽度
-    private static let toolViewHeight : CGFloat = 50    // toolBar 高度
-    
-    // MARK: UI
-    fileprivate var imageFrame  : CGRect! = nil
-    fileprivate var player      : AVPlayer!
-    fileprivate var playerItem  : AVPlayerItem!
-    fileprivate var url         : URL!
-    fileprivate var playerView  : PlayerView = {
-        let aView = PlayerView(frame: UIScreen.main.bounds)
-        aView.backgroundColor = UIColor.clear
-        return aView
-    }()
-    fileprivate var backgroundView : UIView = {
-        let aView = UIView(frame: UIScreen.main.bounds)
-        aView.backgroundColor = UIColor.black
-        aView.alpha = 1
-        return aView
-    }()
-    
-    fileprivate var gustureView : UIView = {
-        let aView = UIView()
-        aView.frame = UIScreen.main.bounds
-        aView.backgroundColor = UIColor.clear
-        return aView
-    }()
-    
-    fileprivate var timeSlider : UISlider! = {
-        let slider  = UISlider()
-        slider.addTarget(self, action: #selector(timeSliderDidChange(_:)), for: .valueChanged)
-        slider.value = 0
-        return slider
-    }()
-    fileprivate var startTimeLabel : UILabel! = {
-      let label = UILabel()
-        label.backgroundColor = UIColor.gray
-        label.textAlignment = .right
-        return label
-    }()
-    fileprivate var durationLabel : UILabel! = {
-        let label = UILabel()
-        label.backgroundColor = UIColor.gray
-          return label
-    }()
-    
-    fileprivate var playBtn : UIButton! = {
-        let btn = UIButton(type: .custom)
-        if #available(iOS 13.0, *) {
-            btn.setImage(UIImage(systemName: "play.fill"), for: .normal)
-        } else {
-            // Fallback on earlier versions
-        }
-        if #available(iOS 13.0, *) {
-            btn.setImage(UIImage(systemName: "play.fill"), for: .highlighted)
-        } else {
-            // Fallback on earlier versions
-        }
-        if #available(iOS 13.0, *) {
-            btn.setImage(UIImage(systemName: "pause.fill"), for: .selected)
-        } else {
-            // Fallback on earlier versions
-        }
-        btn.sizeToFit()
-        btn.addTarget(self, action: #selector(togglePlay), for: .touchUpInside)
-        return btn
-    }()
-    
-    fileprivate var callBack : ( _ index : Int)-> Void = {_ in}
-    fileprivate var buttons : Array<UIButton>? = nil
-    fileprivate var imageStrings : Array<String>? {
-        didSet(newValue) {
-            guard let imageNames = newValue  else {
-                return
-            }
-            for i in 0..<imageNames.count {
-                let str = imageNames[i]
-                let btn = UIButton(type: .custom)
-                btn.setImage(UIImage.init(named: str), for: .normal)
-                btn.setImage(UIImage.init(named: str), for: .highlighted)
-                btn.tag = 2222 + i
-                btn.addTarget(self, action: #selector(btnAction(_:)), for: .touchUpInside)
-                buttons?.append(btn)
-            }
-        }
-    }
-    
     override init(frame: CGRect) {
         super.init(frame : frame)
         self.isHidden = false
@@ -130,6 +76,20 @@ class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
         fatalError("init(coder:) has not been implemented")
     }
     
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        frame = UIScreen.main.bounds
+        backgroundView.frame = bounds
+        gustureView.frame = bounds
+        playerView.frame = bounds
+        surfaceDisplay.frame = CGRect(x: 0, y:bounds.height - displayHeight - UIWindow.safeBottom, width: bounds.width, height: displayHeight)
+    }
+    
+    deinit {
+        playerView.removePlayer()
+        NotificationCenter.default.removeObserver(self)
+    }
+    
     /// 初始化方法
     /// - Parameters:
     ///   - controller: 控制器
@@ -138,18 +98,18 @@ class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
     ///   - closure: 按钮点击回调
     convenience init(controller : UIViewController?,view : UIView?,btns: Array<String>,closure : @escaping (_ index : Int) -> Void) {
         self.init(frame: controller?.view.frame ?? UIScreen.main.bounds)
-        imageStrings = btns
         let btnFrame = view?.superview?.convert(view!.frame, to: controller?.view)
         imageFrame = btnFrame
-//        let aview = UIView(frame: imageFrame)
-//        aview.backgroundColor = UIColor.yellow
         controller?.view.addSubview(self)
         addSubview(backgroundView)
         addSubview(playerView)
         addSubview(gustureView)
+        addSubview(surfaceDisplay)
+        surfaceDisplay.imageStrings = btns
+        surfaceDisplay.timeSlider.addTarget(self, action: #selector(timeSliderDidChange(_:)), for: .valueChanged)
+        surfaceDisplay.playBtn.addTarget(self, action: #selector(togglePlay), for: .touchUpInside)
         addGusture()
         setUpAssets()
-//        addSubview(aview)
     }
     
     func addGusture() {
@@ -159,44 +119,12 @@ class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
         gustureView.addGestureRecognizer(panGesture)
     }
     
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        backgroundView.frame = bounds
-        gustureView.frame = bounds
-        playBtn.frame = CGRect(x: VJPlayVideoView.playLeftSpace, y: bounds.size.height - VJPlayVideoView.bottomHeight, width: VJPlayVideoView.playWidth, height: 44)
-        startTimeLabel.frame = CGRect(x: playBtn.frame.origin.x + playBtn.frame.size.width + VJPlayVideoView.playRightSpace, y: bounds.size.height - VJPlayVideoView.bottomHeight , width: VJPlayVideoView.labelWidth, height: 44)
-        let timeSliderWidth : CGFloat =  bounds.size.width - (VJPlayVideoView.playLeftSpace * 2 + VJPlayVideoView.playRightSpace + VJPlayVideoView.playWidth  + VJPlayVideoView.labelWidth * 2 + 10)
-        let timeSliderLeft : CGFloat = VJPlayVideoView.playLeftSpace + VJPlayVideoView.playWidth + VJPlayVideoView.playRightSpace + VJPlayVideoView.labelWidth + 5
-        timeSlider.frame = CGRect(x: timeSliderLeft, y: bounds.size.height - VJPlayVideoView.bottomHeight , width: timeSliderWidth, height: 44)
-        durationLabel.frame = CGRect(x: timeSlider.frame.origin.x + timeSlider.frame.size.width + 5, y: bounds.size.height - VJPlayVideoView.bottomHeight, width: VJPlayVideoView.labelWidth, height: 44)
-    }
-    
-    deinit {
-        playerView.removePlayer()
-        NotificationCenter.default.removeObserver(self)
-    }
-    
-    @objc func btnAction(_ sender:UIButton) {
-        
-    }
-    
     private func setUpAssets() {
         // 设置静音模式下播放
-//        let avSession = AVAudioSession.sharedInstance()
-//        try! avSession.setCategory(.playback)
+        let avSession = AVAudioSession.sharedInstance()
+        try! avSession.setCategory(.playback)
         backgroundColor = UIColor.clear
-        addSubview(timeSlider)
-        addSubview(startTimeLabel)
-        addSubview(durationLabel)
-        addSubview(playBtn)
         clipsToBounds = true
-    }
-    
-    private func showViews(_ show:Bool) {
-        timeSlider.isHidden = !show
-        startTimeLabel.isHidden = !show
-        durationLabel.isHidden = !show
-        playBtn.isHidden = !show
     }
     
     private static var originPoint : CGPoint!
@@ -225,7 +153,8 @@ class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
                 playerView.center = CGPoint(x: center.x - offSetX, y: centerY)
 //                print("修改前: width : \(bounds.size.width)  , height : \(bounds.size.height)")
 //                print("修改后: width : \(playerView.bounds.size.width)  , height : \(playerView.bounds.size.height)")
-
+                // 背景颜色
+                backgroundView.alpha = proportion  > 0.3 ? proportion : 0.3
             }
 //            print("changed")
         } else if pan.state == .cancelled || pan.state == .ended || pan.state == .recognized || pan.state == .failed {
@@ -242,11 +171,12 @@ class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
             UIView.animate(withDuration: 0.3) {
                 if isHiddenVideoView {
                     self.playerView.frame = self.frame
-                    self.showViews(true)
+                    self.surfaceDisplay.isHidden = false
                     self.backgroundView.alpha = 1
                 }else {
                     print("缩小到视图中")
                     self.playerView.frame = self.imageFrame
+                    self.playerView.playerLayer.player?.pause()
                 }
             } completion: { _ in
                 VJPlayVideoView.originPoint = nil
@@ -264,21 +194,16 @@ class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
     private func moveBegan(_ point : CGPoint) {
         if VJPlayVideoView.originPoint == nil {
             VJPlayVideoView.originPoint = point
-            showViews(false)
-            playerView.playerLayer.player?.pause()
+            surfaceDisplay.isHidden = true
         }
     }
     
     private func removeAllValues() {
-//        self.player.removeObserver(playerItemStatusObserver!, forKeyPath: #keyPath(AVPlayer.timeControlStatus))
-//        self.player.removeObserver(playerTimeControlStatusObserver!, forKeyPath: #keyPath(AVPlayer.timeControlStatus))
+
         if let timeObserverToken = timeObserverToken {
             player.removeTimeObserver(timeObserverToken)
             self.timeObserverToken = nil
         }
-//        self.playerItemStatusObserver = nil
-//        self.playerTimeControlStatusObserver = nil
-//        self.player = nil
         self.playerView.removePlayer() // 暂停播放 释放资源
         self.playerView.removeFromSuperview()
         self.gustureView.removeFromSuperview()
@@ -293,6 +218,47 @@ class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
     }
     */
 }
+
+
+extension VJPlayVideoView {
+    func showVideo(_ url : URL) {
+        playerItem  = AVPlayerItem(url: url )
+        player = AVPlayer(playerItem: playerItem)
+        playerView.playVideo(player)
+        let asset = AVURLAsset(url: url)
+        loadPropertyValues(forAsset: asset)
+    }
+    
+    @objc
+    func togglePlay() {
+        
+        switch player.timeControlStatus {
+        case .playing:
+            player.pause()
+        case .paused:
+            let currentItem = player.currentItem
+            if currentItem?.currentTime() == currentItem?.duration {
+                currentItem?.seek(to: .zero, completionHandler: { finsh in
+                    
+                })
+            }
+            player.play()
+        default:
+            player.pause()
+        }
+    }
+    
+    @objc
+    func timeSliderDidChange(_ sender : UISlider) {
+        
+        let newTime = CMTime(seconds: Double(sender.value), preferredTimescale: 600)
+
+        player.seek(to: newTime, toleranceBefore: .zero, toleranceAfter: .zero)
+    }
+}
+
+
+
 
 extension VJPlayVideoView {
     // MARK: - Asset Property Handling
@@ -356,8 +322,8 @@ extension VJPlayVideoView {
         timeObserverToken = player.addPeriodicTimeObserver(forInterval: interval,
                                                            queue: .main) { [unowned self] time in
             let timeElapsed = Float(time.seconds)
-            self.timeSlider.value = timeElapsed
-            self.startTimeLabel.text = self.createTimeString(time: timeElapsed)
+            self.surfaceDisplay.timeSlider.value = timeElapsed
+            self.surfaceDisplay.startTimeLabel.text = self.createTimeString(time: timeElapsed)
             print(self.createTimeString(time: timeElapsed))
         }
         
@@ -424,7 +390,7 @@ extension VJPlayVideoView {
             buttonImage = UIImage(named: VJPlayVideoView.pauseButtonImageName)
         }
         guard let image = buttonImage else { return }
-        self.playBtn.setImage(image, for: .normal)
+        self.surfaceDisplay.playBtn.setImage(image, for: .normal)
     }
     
     func updateUIforPlayerItemStatus() {
@@ -432,114 +398,31 @@ extension VJPlayVideoView {
         
         switch currentItem.status {
         case .failed:
+            surfaceDisplay.isEnabled(false)
 
-            playBtn.isEnabled = false
-            timeSlider.isEnabled = false
-            startTimeLabel.isEnabled = false
-            durationLabel.isEnabled = false
             handleErrorWithMessage(currentItem.error?.localizedDescription ?? "", error: currentItem.error)
             
         case .readyToPlay:
-            
-            playBtn.isEnabled = true
+            surfaceDisplay.isEnabled(true)
             
             let newDurationSeconds = Float(currentItem.duration.seconds)
-            
             let currentTime = Float(CMTimeGetSeconds(player.currentTime()))
-            
-            timeSlider.maximumValue = newDurationSeconds
-            timeSlider.value = currentTime
-            timeSlider.isEnabled = true
-            startTimeLabel.isEnabled = true
-            startTimeLabel.text = createTimeString(time: currentTime)
-            durationLabel.isEnabled = true
-            durationLabel.text = createTimeString(time: newDurationSeconds)
+            surfaceDisplay.timeSlider.maximumValue = newDurationSeconds
+            surfaceDisplay.timeSlider.value = currentTime
+            surfaceDisplay.startTimeLabel.text = createTimeString(time: currentTime)
+            surfaceDisplay.durationLabel.text = createTimeString(time: newDurationSeconds)
             
         default:
-            playBtn.isEnabled = false
-            timeSlider.isEnabled = false
-            startTimeLabel.isEnabled = false
-            durationLabel.isEnabled = false
+            surfaceDisplay.isEnabled(false)
         }
     }
 }
 
-extension VJPlayVideoView  {
-    
-    func showVideo(_ url : URL) {
-        playerItem  = AVPlayerItem(url: url )
-        player = AVPlayer(playerItem: playerItem)
-        playerView.playVideo(player)
-        let asset = AVURLAsset(url: url)
-        loadPropertyValues(forAsset: asset)
-    }
-}
 
-extension VJPlayVideoView {
-    @objc
-    func togglePlay() {
-        
-        switch player.timeControlStatus {
-        case .playing:
-            player.pause()
-        case .paused:
-            let currentItem = player.currentItem
-            if currentItem?.currentTime() == currentItem?.duration {
-                currentItem?.seek(to: .zero, completionHandler: { finsh in
-                    
-                })
-            }
-            player.play()
-        default:
-            player.pause()
-        }
-    }
-    
-    @objc
-    func timeSliderDidChange(_ sender : UISlider) {
-        
-        let newTime = CMTime(seconds: Double(sender.value), preferredTimescale: 600)
+/*
+ let keyWindow = UIApplication.shared.connectedScenes
+     .map{$0 as? UIWindowScene}
+     .compactMap{$0}
+     .first?.windows.first
+ */
 
-        player.seek(to: newTime, toleranceBefore: .zero, toleranceAfter: .zero)
-    }
-}
-
-
-
-
-/// A simple `UIView` subclass backed by an `AVPlayerLayer` layer.
-class PlayerView: UIView {
-    fileprivate var playerLayer    : AVPlayerLayer!
-
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        playerLayer.frame = self.bounds
-    }
-    
-    
-    @objc func playVideo(_ player : AVPlayer){
-        removePlayer()
-        playerLayer = AVPlayerLayer(player: player)
-        playerLayer.videoGravity = .resizeAspect // 填充方式 充满屏幕  拉伸
-        playerLayer.frame = self.bounds
-        layer.addSublayer(playerLayer)
-    }
-    
-    func removePlayer(){
-        if playerLayer != nil {
-            playerLayer.player?.pause()
-            playerLayer.removeAllAnimations()
-            playerLayer.removeFromSuperlayer()
-            playerLayer = nil
-        }
-    }
-}

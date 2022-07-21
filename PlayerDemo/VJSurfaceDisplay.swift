@@ -75,6 +75,7 @@ class VJSurfaceDisplay: UIView {
                 btn.setImage(UIImage.init(named: str), for: .highlighted)
                 btn.tag = 2222 + i
                 btn.addTarget(self, action: #selector(btnAction(_:)), for: .touchUpInside)
+                addSubview(btn)
                 buttons?.append(btn)
             }
         }
@@ -115,6 +116,14 @@ class VJSurfaceDisplay: UIView {
         durationLabel.frame = CGRect(x: timeSlider.frame.origin.x + timeSlider.frame.size.width + 5, y: bounds.size.height - bottomHeight, width: labelWidth, height: 44)
     }
     
+    func resourceRelease() {
+        buttons?.forEach{$0.removeFromSuperview()}
+        buttons?.removeAll()
+    }
+    
+    deinit {
+        
+    }
     
     @objc func btnAction(_ sender:UIButton) {
         

@@ -100,6 +100,7 @@ class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
         let btnFrame = view?.superview?.convert(view!.frame, to: controller?.view)
         imageFrame = btnFrame
         controller?.view.addSubview(self)
+        callBack = closure
         addSubview(backgroundView)
         addSubview(playerView)
         addSubview(gustureView)
@@ -194,7 +195,7 @@ class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
                 VJPlayVideoView.originPoint = nil
                 VJPlayVideoView.isPortrait = true
                 if !isHiddenVideoView {
-                    self.removeAllValues()
+                    self.resourceRelease()
                 }
             }
 //            videoView.center = CGPoint(x: view.center.x, y: view.center.y)
@@ -202,6 +203,7 @@ class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
         }
         
     }
+
     
     private func moveBegan(_ point : CGPoint) {
         if VJPlayVideoView.originPoint == nil {
@@ -210,15 +212,22 @@ class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
         }
     }
     
-    private func removeAllValues() {
-
+    /// 退出时释放资源
+    private func resourceRelease() {
         if let timeObserverToken = timeObserverToken {
             player.removeTimeObserver(timeObserverToken)
             self.timeObserverToken = nil
         }
         self.playerView.removePlayer() // 暂停播放 释放资源
-        self.playerView.removeFromSuperview()
+        self.backgroundView.removeFromSuperview()
         self.gustureView.removeFromSuperview()
+        self.playerView.removeFromSuperview()
+        self.surfaceDisplay.resourceRelease()
+        self.surfaceDisplay.removeFromSuperview()
+        imageFrame = nil
+        player = nil
+        playerItem = nil
+        url = nil
         self.removeFromSuperview()
     }
     

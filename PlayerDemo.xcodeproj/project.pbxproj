@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		AA327417287440AB009C762F /* 1653903243735430.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = AA327416287440AB009C762F /* 1653903243735430.mp4 */; };
+		AA71B64E28890A5C00D39A28 /* VJPlayerEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA71B64D28890A5C00D39A28 /* VJPlayerEngine.swift */; };
 		AAACDA872886837F00ED8038 /* VJPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAACDA862886837F00ED8038 /* VJPlayerView.swift */; };
 		AAACDA892886845F00ED8038 /* VJSurfaceDisplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAACDA882886845F00ED8038 /* VJSurfaceDisplay.swift */; };
 		AAACDA8C2886AEC100ED8038 /* VJUIWindowExt.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAACDA8B2886AEC100ED8038 /* VJUIWindowExt.swift */; };
@@ -35,6 +36,7 @@
 
 /* Begin PBXFileReference section */
 		AA327416287440AB009C762F /* 1653903243735430.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = 1653903243735430.mp4; sourceTree = "<group>"; };
+		AA71B64D28890A5C00D39A28 /* VJPlayerEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VJPlayerEngine.swift; sourceTree = "<group>"; };
 		AAACDA862886837F00ED8038 /* VJPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VJPlayerView.swift; sourceTree = "<group>"; };
 		AAACDA882886845F00ED8038 /* VJSurfaceDisplay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VJSurfaceDisplay.swift; sourceTree = "<group>"; };
 		AAACDA8B2886AEC100ED8038 /* VJUIWindowExt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VJUIWindowExt.swift; sourceTree = "<group>"; };
@@ -73,6 +75,18 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		AA71B64A288909D400D39A28 /* VJPlayer */ = {
+			isa = PBXGroup;
+			children = (
+				AAF5F0982872E8E400D1EB97 /* VJPlayVideoView.swift */,
+				AA71B64D28890A5C00D39A28 /* VJPlayerEngine.swift */,
+				AAACDA862886837F00ED8038 /* VJPlayerView.swift */,
+				AAACDA882886845F00ED8038 /* VJSurfaceDisplay.swift */,
+				AAACDA8B2886AEC100ED8038 /* VJUIWindowExt.swift */,
+			);
+			path = VJPlayer;
+			sourceTree = "<group>";
+		};
 		AAF5F0532872CBE300D1EB97 = {
 			isa = PBXGroup;
 			children = (
@@ -101,10 +115,7 @@
 				AAF5F0632872CBE300D1EB97 /* ViewController.swift */,
 				AAF5F0942872CD0800D1EB97 /* CustomTableViewCell.xib */,
 				AAF5F0932872CD0800D1EB97 /* CustomTableViewCell.swift */,
-				AAF5F0982872E8E400D1EB97 /* VJPlayVideoView.swift */,
-				AAACDA862886837F00ED8038 /* VJPlayerView.swift */,
-				AAACDA882886845F00ED8038 /* VJSurfaceDisplay.swift */,
-				AAACDA8B2886AEC100ED8038 /* VJUIWindowExt.swift */,
+				AA71B64A288909D400D39A28 /* VJPlayer */,
 				AAF5F0652872CBE300D1EB97 /* Main.storyboard */,
 				AAF5F0682872CBE400D1EB97 /* Assets.xcassets */,
 				AAF5F06A2872CBE400D1EB97 /* LaunchScreen.storyboard */,
@@ -238,6 +249,7 @@
 				AAACDA892886845F00ED8038 /* VJSurfaceDisplay.swift in Sources */,
 				AAF5F0602872CBE300D1EB97 /* AppDelegate.swift in Sources */,
 				AAF5F0952872CD0800D1EB97 /* CustomTableViewCell.swift in Sources */,
+				AA71B64E28890A5C00D39A28 /* VJPlayerEngine.swift in Sources */,
 				AAACDA8C2886AEC100ED8038 /* VJUIWindowExt.swift in Sources */,
 				AAF5F0622872CBE300D1EB97 /* SceneDelegate.swift in Sources */,
 				AAACDA872886837F00ED8038 /* VJPlayerView.swift in Sources */,

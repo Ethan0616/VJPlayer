@@ -12,6 +12,7 @@
 		AAACDA872886837F00ED8038 /* VJPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAACDA862886837F00ED8038 /* VJPlayerView.swift */; };
 		AAACDA892886845F00ED8038 /* VJSurfaceDisplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAACDA882886845F00ED8038 /* VJSurfaceDisplay.swift */; };
 		AAACDA8C2886AEC100ED8038 /* VJUIWindowExt.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAACDA8B2886AEC100ED8038 /* VJUIWindowExt.swift */; };
+		AACC500E288A451C00E345DF /* VJSlider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACC500D288A451C00E345DF /* VJSlider.swift */; };
 		AAF5F0602872CBE300D1EB97 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF5F05F2872CBE300D1EB97 /* AppDelegate.swift */; };
 		AAF5F0622872CBE300D1EB97 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF5F0612872CBE300D1EB97 /* SceneDelegate.swift */; };
 		AAF5F0642872CBE300D1EB97 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF5F0632872CBE300D1EB97 /* ViewController.swift */; };
@@ -40,6 +41,7 @@
 		AAACDA862886837F00ED8038 /* VJPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VJPlayerView.swift; sourceTree = "<group>"; };
 		AAACDA882886845F00ED8038 /* VJSurfaceDisplay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VJSurfaceDisplay.swift; sourceTree = "<group>"; };
 		AAACDA8B2886AEC100ED8038 /* VJUIWindowExt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VJUIWindowExt.swift; sourceTree = "<group>"; };
+		AACC500D288A451C00E345DF /* VJSlider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VJSlider.swift; sourceTree = "<group>"; };
 		AAF5F05C2872CBE300D1EB97 /* PlayerDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PlayerDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AAF5F05F2872CBE300D1EB97 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		AAF5F0612872CBE300D1EB97 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -83,6 +85,7 @@
 				AAACDA862886837F00ED8038 /* VJPlayerView.swift */,
 				AAACDA882886845F00ED8038 /* VJSurfaceDisplay.swift */,
 				AAACDA8B2886AEC100ED8038 /* VJUIWindowExt.swift */,
+				AACC500D288A451C00E345DF /* VJSlider.swift */,
 			);
 			path = VJPlayer;
 			sourceTree = "<group>";
@@ -244,6 +247,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AACC500E288A451C00E345DF /* VJSlider.swift in Sources */,
 				AAF5F0992872E8E400D1EB97 /* VJPlayVideoView.swift in Sources */,
 				AAF5F0642872CBE300D1EB97 /* ViewController.swift in Sources */,
 				AAACDA892886845F00ED8038 /* VJSurfaceDisplay.swift in Sources */,
@@ -345,7 +349,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -400,7 +404,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
@@ -423,9 +427,10 @@
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -452,9 +457,10 @@
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

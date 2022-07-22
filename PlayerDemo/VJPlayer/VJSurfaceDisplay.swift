@@ -7,7 +7,7 @@
 
 import UIKit
 
-class VJSurfaceDisplay: UIView {
+internal class VJSurfaceDisplay: UIView {
     // Public
     public func isEnabled(_ enable:Bool) {
         playBtn.isEnabled = enable
@@ -45,9 +45,11 @@ class VJSurfaceDisplay: UIView {
         return btn
     }()
     
-    var timeSlider : UISlider! = {
-        let slider  = UISlider()
+    var timeSlider : VJSlider! = {
+        let slider  = VJSlider()
         slider.value = 0
+        slider.setThumbImage(UIImage.init(named: "image"), for: .normal)
+//        slider.isContinuous = false
         return slider
     }()
     var startTimeLabel : UILabel! = {
@@ -138,3 +140,36 @@ class VJSurfaceDisplay: UIView {
     */
 
 }
+
+//public extension UISlider {
+//    
+//    static var isDrag : Bool = false
+//    
+//    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+//        super.touchesBegan(touches, with: event)
+//        guard let touch = touches.first else { return }
+//        // 点击点
+//        let touchPoint : CGPoint = touch.location(in: self)
+//        // 滑块rect
+//        let thumImageRect = self.thumbRect(forBounds: self.bounds, trackRect: self.bounds, value: self.value)
+//        // 坐标系转换到slider
+//        let rect = self.convert(thumImageRect, to: self)
+//        // 是否为滑块触摸的地方
+//        let isContain : Bool = rect.contains(touchPoint)
+//        
+//        if isContain {
+////            print("开始拖拽")
+//            UISlider.isDrag = true
+//        } else {
+////            print("点击区域超出范围")
+//        }
+//    }
+//    
+//    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+//        super.touchesEnded(touches, with: event)
+//        if UISlider.isDrag {
+//            UISlider.isDrag = false
+////            print("拖拽结束")
+//        }
+//    }
+//}

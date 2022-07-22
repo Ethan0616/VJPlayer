@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 
-extension UIWindow {
+internal extension UIWindow {
     
     static func isLandscape() -> Bool {
         if #available(iOS 13, *) {
@@ -45,3 +45,4 @@ extension UIWindow {
         return key?.safeAreaInsets.bottom ?? 0
     }
 }
+

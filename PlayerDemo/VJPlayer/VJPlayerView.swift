@@ -8,9 +8,9 @@
 import UIKit
 import AVFoundation
 
-class VJPlayerView: UIView {
+internal class VJPlayerView: UIView {
 
-    var playerLayer  : AVPlayerLayer!
+    var playerLayer  : AVPlayerLayer? 
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -23,26 +23,9 @@ class VJPlayerView: UIView {
     
     override func layoutSubviews() {
         super.layoutSubviews()
-        playerLayer.frame = self.bounds
+        playerLayer?.frame = self.bounds
     }
     
-    
-    @objc func playVideo(_ player : AVPlayer){
-        removePlayer()
-        playerLayer = AVPlayerLayer(player: player)
-        playerLayer.videoGravity = .resizeAspect // 填充方式 充满屏幕  拉伸
-        playerLayer.frame = self.bounds
-        layer.addSublayer(playerLayer)
-    }
-    
-    func removePlayer(){
-        if playerLayer != nil {
-            playerLayer.player?.pause()
-            playerLayer.removeAllAnimations()
-            playerLayer.removeFromSuperlayer()
-            playerLayer = nil
-        }
-    }
     
     /*
     // Only override draw() if you perform custom drawing.

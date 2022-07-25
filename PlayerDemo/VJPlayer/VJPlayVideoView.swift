@@ -38,7 +38,7 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
     // 顶层按钮 overlayer
     fileprivate var surfaceDisplay : VJSurfaceDisplay = {
         let aView = VJSurfaceDisplay(frame: CGRect.zero)
-        
+        aView.backgroundColor = UIColor.clear
         return aView
     }()
     
@@ -85,6 +85,7 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
         surfaceDisplay.imageStrings = btns
         surfaceDisplay.timeSlider.addTarget(self, action: #selector(timeSliderDidChange(_:)), for: .valueChanged)
         surfaceDisplay.playBtn.addTarget(self, action: #selector(togglePlay), for: .touchUpInside)
+        surfaceDisplay.closeBtn.addTarget(self, action: #selector(closeAction), for: .touchUpInside)
         addGusture()
         setUpAssets()
         NotificationCenter.default.addObserver(self, selector: #selector(deviceOrientationDidChangeNotificationAction(_:)), name: UIApplication.didChangeStatusBarOrientationNotification, object: nil)
@@ -245,22 +246,44 @@ extension VJPlayVideoView {
             VJPlayerEngine.removePeriodicTimeObserver()
         }
         
-        surfaceDisplay.timeSlider.endDragging = {
+        surfaceDisplay.timeSlider.endDragging = { (slider : VJSlider) in
             print("拖拽结束=====================")
             print("添加监听")
-            VJPlayerEngine.addPeriodicTimeObserver()
-//            DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 1) {
-//                DispatchQueue.main.async {
-//                }
-//            }
+            
+            DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 0.4) {
+                DispatchQueue.main.async {
+                    print("添加监听===================== async")
+                    if slider.isDrag { return }
+                    VJPlayerEngine.addPeriodicTimeObserver()
+                    print("添加监听===================== 当前值\(slider.value)")
+
+                }
+            }
         }
         
     }
     
+    /// 播放暂停切换事件
     @objc func togglePlay() {
         VJPlayerEngine.togglePlay()
+        surfaceDisplay.refreshButtonImage(VJPlayerEngine.currentlyPlaying())
     }
     
+    @objc func closeAction() {
+
+        UIView.animate(withDuration: 0.3) {
+            print("缩小到视图中")
+            self.playerView.frame = self.imageFrame
+            VJPlayerEngine.pause()
+        } completion: { _ in
+            VJPlayVideoView.originPoint = nil
+            VJPlayVideoView.isPortrait = true
+            self.resourceRelease()
+
+        }
+    }
+    
+    ///  播放进度条拖拽事件
     @objc func timeSliderDidChange(_ sender : UISlider) {
         if let slider : VJSlider = sender as? VJSlider , slider.isDrag {
             let text = VJPlayerEngine.shared().createTimeString(time: slider.value)

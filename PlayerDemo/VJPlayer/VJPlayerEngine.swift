@@ -15,6 +15,7 @@ public typealias SliderButtonImage = (_ image: UIImage) -> Void
 
 internal class VJPlayerEngine: NSObject {
 
+    fileprivate var playValue : Float = -1
     fileprivate var isPlaying : Bool = false
     fileprivate weak var playerLayer : AVPlayerLayer? = nil
     fileprivate var player      : AVPlayer!
@@ -103,8 +104,8 @@ internal class VJPlayerEngine: NSObject {
     /// - Parameter url: 播放资源
     func showVideo(_ url : URL , closure : @escaping (_ playLayer : AVPlayerLayer) -> Void) {
         // 设置静音模式下播放
-        let avSession = AVAudioSession.sharedInstance()
-        try! avSession.setCategory(.playback)
+//        let avSession = AVAudioSession.sharedInstance()
+//        try! avSession.setCategory(.playback)
         
         self.url = url
         playerItem  = AVPlayerItem(url: url )
@@ -114,6 +115,7 @@ internal class VJPlayerEngine: NSObject {
 //        print(tempPlayerLayer)
         self.playerLayer = tempPlayerLayer
         closure(tempPlayerLayer)
+        startPlay()
         let asset = AVURLAsset(url: url)
         loadPropertyValues(forAsset: asset)
     }
@@ -151,7 +153,7 @@ internal class VJPlayerEngine: NSObject {
     
     /// 播放器监听事件 (自动)
     func addPeriodicTimeObserver() {
-        
+        print("将要添加监听====================")
         let interval = CMTime(value: 1, timescale: 2)
         timeObserverToken = player.addPeriodicTimeObserver(forInterval: interval,
                                                            queue: .main) { [unowned self] time in
@@ -165,10 +167,14 @@ internal class VJPlayerEngine: NSObject {
     // remove a registered time observer
     func removePeriodicTimeObserver() {
         // If a time observer exists, remove it
+        objc_sync_enter(self)
+        print("将要移除observer==============")
         if let timeObserverToken = timeObserverToken {
             player.removeTimeObserver(timeObserverToken)
             self.timeObserverToken = nil
+            print("移除监听完成====================")
         }
+        objc_sync_exit(self)
     }
     
     /// 正在播放中

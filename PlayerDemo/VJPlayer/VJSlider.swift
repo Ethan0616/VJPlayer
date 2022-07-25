@@ -12,7 +12,7 @@ class VJSlider: UISlider {
     var isDrag : Bool = false
     
     var startDragging : (()->Void)? = nil
-    var endDragging : (()->Void)? = nil
+    var endDragging : ((VJSlider)->Void)? = nil
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         super.touchesBegan(touches, with: event)
@@ -42,7 +42,7 @@ class VJSlider: UISlider {
         if isDrag {
             isDrag = false
             if let event = endDragging {
-                event()
+                event(self)
             }
 //            print("拖拽结束")
         }

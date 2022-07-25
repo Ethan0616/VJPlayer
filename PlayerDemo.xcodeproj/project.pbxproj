@@ -7,11 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AA063AFA288E40A4002C2432 /* Resource.bundle in Resources */ = {isa = PBXBuildFile; fileRef = AA063AF9288E40A4002C2432 /* Resource.bundle */; };
+		AA063AFE288E4506002C2432 /* VJExtention.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA063AFD288E4506002C2432 /* VJExtention.swift */; };
 		AA327417287440AB009C762F /* 1653903243735430.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = AA327416287440AB009C762F /* 1653903243735430.mp4 */; };
 		AA71B64E28890A5C00D39A28 /* VJPlayerEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA71B64D28890A5C00D39A28 /* VJPlayerEngine.swift */; };
 		AAACDA872886837F00ED8038 /* VJPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAACDA862886837F00ED8038 /* VJPlayerView.swift */; };
 		AAACDA892886845F00ED8038 /* VJSurfaceDisplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAACDA882886845F00ED8038 /* VJSurfaceDisplay.swift */; };
-		AAACDA8C2886AEC100ED8038 /* VJUIWindowExt.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAACDA8B2886AEC100ED8038 /* VJUIWindowExt.swift */; };
 		AACC500E288A451C00E345DF /* VJSlider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACC500D288A451C00E345DF /* VJSlider.swift */; };
 		AAF5F0602872CBE300D1EB97 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF5F05F2872CBE300D1EB97 /* AppDelegate.swift */; };
 		AAF5F0622872CBE300D1EB97 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF5F0612872CBE300D1EB97 /* SceneDelegate.swift */; };
@@ -36,11 +37,12 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		AA063AF9288E40A4002C2432 /* Resource.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = Resource.bundle; sourceTree = "<group>"; };
+		AA063AFD288E4506002C2432 /* VJExtention.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VJExtention.swift; sourceTree = "<group>"; };
 		AA327416287440AB009C762F /* 1653903243735430.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = 1653903243735430.mp4; sourceTree = "<group>"; };
 		AA71B64D28890A5C00D39A28 /* VJPlayerEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VJPlayerEngine.swift; sourceTree = "<group>"; };
 		AAACDA862886837F00ED8038 /* VJPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VJPlayerView.swift; sourceTree = "<group>"; };
 		AAACDA882886845F00ED8038 /* VJSurfaceDisplay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VJSurfaceDisplay.swift; sourceTree = "<group>"; };
-		AAACDA8B2886AEC100ED8038 /* VJUIWindowExt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VJUIWindowExt.swift; sourceTree = "<group>"; };
 		AACC500D288A451C00E345DF /* VJSlider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VJSlider.swift; sourceTree = "<group>"; };
 		AAF5F05C2872CBE300D1EB97 /* PlayerDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PlayerDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AAF5F05F2872CBE300D1EB97 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -80,11 +82,12 @@
 		AA71B64A288909D400D39A28 /* VJPlayer */ = {
 			isa = PBXGroup;
 			children = (
+				AA063AF9288E40A4002C2432 /* Resource.bundle */,
 				AAF5F0982872E8E400D1EB97 /* VJPlayVideoView.swift */,
 				AA71B64D28890A5C00D39A28 /* VJPlayerEngine.swift */,
 				AAACDA862886837F00ED8038 /* VJPlayerView.swift */,
 				AAACDA882886845F00ED8038 /* VJSurfaceDisplay.swift */,
-				AAACDA8B2886AEC100ED8038 /* VJUIWindowExt.swift */,
+				AA063AFD288E4506002C2432 /* VJExtention.swift */,
 				AACC500D288A451C00E345DF /* VJSlider.swift */,
 			);
 			path = VJPlayer;
@@ -228,6 +231,7 @@
 				AA327417287440AB009C762F /* 1653903243735430.mp4 in Resources */,
 				AAF5F06C2872CBE400D1EB97 /* LaunchScreen.storyboard in Resources */,
 				AAF5F0692872CBE400D1EB97 /* Assets.xcassets in Resources */,
+				AA063AFA288E40A4002C2432 /* Resource.bundle in Resources */,
 				AAF5F0962872CD0800D1EB97 /* CustomTableViewCell.xib in Resources */,
 				AAF5F0672872CBE300D1EB97 /* Main.storyboard in Resources */,
 			);
@@ -253,8 +257,8 @@
 				AAACDA892886845F00ED8038 /* VJSurfaceDisplay.swift in Sources */,
 				AAF5F0602872CBE300D1EB97 /* AppDelegate.swift in Sources */,
 				AAF5F0952872CD0800D1EB97 /* CustomTableViewCell.swift in Sources */,
+				AA063AFE288E4506002C2432 /* VJExtention.swift in Sources */,
 				AA71B64E28890A5C00D39A28 /* VJPlayerEngine.swift in Sources */,
-				AAACDA8C2886AEC100ED8038 /* VJUIWindowExt.swift in Sources */,
 				AAF5F0622872CBE300D1EB97 /* SceneDelegate.swift in Sources */,
 				AAACDA872886837F00ED8038 /* VJPlayerView.swift in Sources */,
 			);

@@ -12,7 +12,8 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
 
     fileprivate var imageFrame  : CGRect! = nil
 
-    private let displayHeight : CGFloat = 100    // VJSurfaceDisplay 整体视图所占的高度
+    private let displayHeight : CGFloat = 100   // 竖屏状态下 VJSurfaceDisplay 整体视图所占的高度
+    private let displayLandscapeHeight : CGFloat = 44    // 横屏状态下 整体视图所占高度
     // MARK: UI
     // 视图顺序，自下而上
     // 蒙版
@@ -42,7 +43,7 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
         return aView
     }()
     
-    fileprivate var callBack : ( _ index : Int)-> Void = {_ in}
+    fileprivate var callBack : (( _ index : Int)-> Void)? = nil
     
     override init(frame: CGRect) {
         super.init(frame : frame)
@@ -59,7 +60,11 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
         frame = UIScreen.main.bounds
         backgroundView.frame = bounds
         gustureView.frame = bounds
-        surfaceDisplay.frame = CGRect(x: 0, y:bounds.height - displayHeight - UIWindow.safeBottom, width: bounds.width, height: displayHeight)
+        if !UIWindow.isLandscape() {
+            surfaceDisplay.frame = CGRect(x: 0, y:bounds.height - displayHeight - UIWindow.safeBottom, width: bounds.width, height: displayHeight)
+        } else {
+            surfaceDisplay.frame = CGRect(x: 0, y:bounds.height - displayLandscapeHeight - UIWindow.safeBottom, width: bounds.width, height: displayLandscapeHeight)
+        }
     }
     
     deinit {
@@ -82,7 +87,8 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
         addSubview(playerView)
         addSubview(gustureView)
         addSubview(surfaceDisplay)
-        surfaceDisplay.imageStrings = btns
+        surfaceDisplay.setButtonImage(btns)
+        addBtnTarget()
         surfaceDisplay.timeSlider.addTarget(self, action: #selector(timeSliderDidChange(_:)), for: .valueChanged)
         surfaceDisplay.playBtn.addTarget(self, action: #selector(togglePlay), for: .touchUpInside)
         surfaceDisplay.closeBtn.addTarget(self, action: #selector(closeAction), for: .touchUpInside)
@@ -92,6 +98,20 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
         if #available(iOS 13, *) {
             // 缺失iOS13以上监听屏幕旋转的方法
         } else {
+        }
+    }
+    
+    private func addBtnTarget() {
+        surfaceDisplay.buttons.forEach { btn in
+            btn.addTarget(self, action: #selector(btnAction(_:)), for: .touchUpInside)
+        }
+    }
+    
+    @objc func btnAction(_ buttton : UIButton ) {
+        let index = buttton.tag - 2222
+        print("点击了第\(index)按钮")
+        if let call = callBack  {
+            call(index)
         }
     }
     

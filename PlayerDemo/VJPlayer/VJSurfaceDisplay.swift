@@ -18,6 +18,8 @@ internal class VJSurfaceDisplay: UIView {
     
     // MARK: layout
     private let bottomHeight : CGFloat = 100     // 距离底边距离
+    private let labelHeight  : CGFloat = 44
+    private let labelSpacing : CGFloat = 15      // 元素与元素间距
     private let playLeftSpace: CGFloat = 20      // 播放按钮左侧空间
     private let playWidth    : CGFloat = 25      // 播放按钮宽度
     private let closeWidth    : CGFloat = 30      // 关闭按钮宽度
@@ -68,22 +70,21 @@ internal class VJSurfaceDisplay: UIView {
           return label
     }()
     
-    var buttons : Array<UIButton>? = nil
-    var imageStrings : Array<String>? {
-        didSet(newValue) {
-            guard let imageNames = newValue  else {
-                return
-            }
-            for i in 0..<imageNames.count {
-                let str = imageNames[i]
-                let btn = UIButton(type: .custom)
-                btn.setImage(UIImage.init(named: str), for: .normal)
-                btn.setImage(UIImage.init(named: str), for: .highlighted)
-                btn.tag = 2222 + i
-                btn.addTarget(self, action: #selector(btnAction(_:)), for: .touchUpInside)
-                addSubview(btn)
-                buttons?.append(btn)
-            }
+    var buttons : Array<UIButton> = []
+    
+    func setButtonImage(_ imageStrings : Array<String>?) {
+        guard let imageNames = imageStrings  else {
+            return
+        }
+        buttons.removeAll()
+        for i in 0..<imageNames.count {
+            let str = imageNames[i]
+            let btn = UIButton(type: .custom)
+            btn.setImage(UIImage.resource(str, Dir: nil), for: .normal)
+            btn.setImage(UIImage.resource(str, Dir: nil), for: .highlighted)
+            btn.tag = 2222 + i
+            addSubview(btn)
+            buttons.append(btn)
         }
     }
     
@@ -115,26 +116,49 @@ internal class VJSurfaceDisplay: UIView {
         } else {
             print("竖屏")
         }
-        playBtn.frame = CGRect(x: playLeftSpace, y: bounds.size.height - bottomHeight + (44 - playWidth) * 0.5, width: playWidth, height: playWidth)
-        closeBtn.frame = CGRect(x: playLeftSpace, y: bounds.size.height - closeWidth - (44 - closeWidth) * 0.5, width: closeWidth, height: closeWidth)
-        closeBtn.center = CGPoint(x: playBtn.center.x, y: closeBtn.frame.origin.y + closeWidth * 0.5)
-        startTimeLabel.frame = CGRect(x: playBtn.frame.origin.x + playBtn.frame.size.width + playRightSpace, y: bounds.size.height - bottomHeight , width: labelWidth, height: 44)
-        let timeSliderWidth : CGFloat =  bounds.size.width - (playLeftSpace * 2 + playRightSpace + playWidth  + labelWidth * 2 + 10)
-        let timeSliderLeft : CGFloat = playLeftSpace + playWidth + playRightSpace + labelWidth + 5
-        timeSlider.frame = CGRect(x: timeSliderLeft, y: bounds.size.height - bottomHeight , width: timeSliderWidth, height: 44)
-        durationLabel.frame = CGRect(x: timeSlider.frame.origin.x + timeSlider.frame.size.width + 5, y: bounds.size.height - bottomHeight, width: labelWidth, height: 44)
+        // 竖屏
+        if !UIWindow.isLandscape() {
+            playBtn.frame = CGRect(x: playLeftSpace, y: bounds.size.height - bottomHeight + (labelHeight - playWidth) * 0.5, width: playWidth, height: playWidth)
+            closeBtn.frame = CGRect(x: playLeftSpace, y: bounds.size.height - closeWidth - (labelHeight - closeWidth) * 0.5, width: closeWidth, height: closeWidth)
+            closeBtn.center = CGPoint(x: playBtn.center.x, y: closeBtn.frame.origin.y + closeWidth * 0.5)
+            startTimeLabel.frame = CGRect(x: playBtn.frame.origin.x + playBtn.frame.size.width + playRightSpace, y: bounds.size.height - bottomHeight , width: labelWidth, height: labelHeight)
+            let timeSliderWidth : CGFloat =  bounds.size.width - (playLeftSpace * 2 + playRightSpace + playWidth  + labelWidth * 2 + 10)
+            let timeSliderLeft : CGFloat = playLeftSpace + playWidth + playRightSpace + labelWidth + 5
+            timeSlider.frame = CGRect(x: timeSliderLeft, y: bounds.size.height - bottomHeight , width: timeSliderWidth, height: labelHeight)
+            durationLabel.frame = CGRect(x: timeSlider.frame.origin.x + timeSlider.frame.size.width + 5, y: bounds.size.height - bottomHeight, width: labelWidth, height: labelHeight)
+            var i :CGFloat = 0
+            buttons.reversed().forEach { btn in
+                btn.frame = CGRect(x: bounds.width - playLeftSpace - closeWidth - i * (closeWidth + 10), y: closeBtn.frame.origin.y, width: closeWidth, height: closeWidth)
+                i += 1
+            }
+        } else {
+            let h = bounds.size.height
+            closeBtn.frame = CGRect(x: playLeftSpace * 2, y: (h - closeWidth) * 0.5, width: closeWidth, height: closeWidth)
+            playBtn.frame = CGRect(x: closeBtn.frame.origin.x + closeWidth + labelSpacing * 2, y: (h - playWidth) * 0.5, width: playWidth, height: playWidth)
+            startTimeLabel.frame = CGRect(x: playBtn.frame.origin.x + playWidth + playRightSpace, y: (h - labelHeight) * 0.5 , width: labelWidth, height: labelHeight)
+            let timeSliderLeft : CGFloat = startTimeLabel.frame.origin.x + startTimeLabel.bounds.size.width + 5
+            var btnCount : CGFloat = 0
+            if buttons.count > 0 {
+                btnCount = CGFloat(buttons.count)
+            }
+            let timeSliderWidth : CGFloat =  bounds.size.width - timeSliderLeft - btnCount * closeWidth - btnCount * labelSpacing - labelWidth - playLeftSpace
+            timeSlider.frame = CGRect(x: timeSliderLeft, y: (h - labelHeight) * 0.5 , width: timeSliderWidth, height: labelHeight)
+            durationLabel.frame = CGRect(x: timeSlider.frame.origin.x + timeSlider.frame.size.width + 5, y: (h - labelHeight) * 0.5, width: labelWidth, height: labelHeight)
+            var i :CGFloat = 0
+            buttons.forEach { btn in
+                btn.frame = CGRect(x: durationLabel.frame.origin.x + labelWidth + (labelSpacing + closeWidth) * i, y: (h - closeWidth) * 0.5, width: closeWidth, height: closeWidth)
+                i += 1
+            }
+        }
+
     }
     
     func resourceRelease() {
-        buttons?.forEach{$0.removeFromSuperview()}
-        buttons?.removeAll()
+        buttons.forEach{$0.removeFromSuperview()}
+        buttons.removeAll()
     }
     
     deinit {
-        
-    }
-    
-    @objc func btnAction(_ sender:UIButton) {
         
     }
     

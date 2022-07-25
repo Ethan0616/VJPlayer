@@ -47,7 +47,7 @@ class CustomTableViewCell: UITableViewCell {
         // 这部分只是用于演示，当在controller中调用时，需要自定义代理，把URL传入SDK
         let btnFrame = self.convert(self.imageBtn.frame, to: controller?.view)
         if let urlPath = delegate?.imageClicked(btnFrame) {
-            let videoView = VJPlayVideoView(controller: controller, view: imageBtn, btns: ["123"]) { index in
+            let videoView = VJPlayVideoView(controller: controller, view: imageBtn, btns: ["download","photoAlbum","more"]) { index in
                 print(index)
             }
             // 唤起页面 核心代码

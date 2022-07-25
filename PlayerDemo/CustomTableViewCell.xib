@@ -31,12 +31,6 @@
                             <action selector="imageBtnAction:" destination="KGk-i7-Jjw" eventType="touchUpInside" id="Nsb-3b-Qar"/>
                         </connections>
                     </button>
-                    <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="7az-Fu-gja">
-                        <rect key="frame" x="83" y="25" width="82" height="31"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        <state key="normal" title="Button"/>
-                        <buttonConfiguration key="configuration" style="plain" image="play.fill" catalog="system" title="Button"/>
-                    </button>
                 </subviews>
                 <constraints>
                     <constraint firstItem="HMe-pQ-Fdk" firstAttribute="centerY" secondItem="H2p-sc-9uM" secondAttribute="centerY" id="2Zz-1U-mIz"/>
@@ -51,7 +45,6 @@
         </tableViewCell>
     </objects>
     <resources>
-        <image name="play.fill" catalog="system" width="116" height="128"/>
         <systemColor name="systemGreenColor">
             <color red="0.20392156862745098" green="0.7803921568627451" blue="0.34901960784313724" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>

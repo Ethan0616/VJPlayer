@@ -274,9 +274,7 @@ extension VJPlayerEngine {
     
     // MARK: - Key-Value Observing
     func setupPlayerObservers() {
-        // 增加播放监听
-        addPeriodicTimeObserver()
-        
+
         playerTimeControlStatusObserver = player.observe(\AVPlayer.timeControlStatus,
                                                          options: [.initial, .new]) { [unowned self] _, _ in
             DispatchQueue.main.async {
@@ -285,6 +283,10 @@ extension VJPlayerEngine {
                 }
             }
         }
+        
+        // 增加播放监听
+        addPeriodicTimeObserver()
+        
 //        playerItemFastForwardObserver = player.observe(\AVPlayer.currentItem?.canPlayFastForward,
 //                                                       options: [.new, .initial]) { [unowned self] player, _ in
 //            DispatchQueue.main.async {
@@ -342,9 +344,12 @@ extension VJPlayerEngine {
         case .playing:
             
             VJPlayerEngine.sliderPlayButtonImage(true)
-        case .paused, .waitingToPlayAtSpecifiedRate:
+        case .paused:
             
             VJPlayerEngine.sliderPlayButtonImage(false)
+        case  .waitingToPlayAtSpecifiedRate:
+            
+            print(" .waitingToPlayAtSpecifiedRate")
         @unknown default:
             
             VJPlayerEngine.sliderPlayButtonImage(false)

@@ -128,7 +128,9 @@ internal class VJPlayerEngine: NSObject {
             
         case .paused:
             let currentItem = player.currentItem
-            if currentItem?.currentTime() == currentItem?.duration {
+            // 10 为阀值，可适当放宽
+            // 修复了当滑块拖拽到影片结束，需要连续点击两次才能再次播放的bug
+            if let durationValue = currentItem?.duration.value, let currentValue = currentItem?.currentTime().value , durationValue - currentValue < 10 {
                 currentItem?.seek(to: .zero, completionHandler: { finsh in
                     
                 })
@@ -145,7 +147,7 @@ internal class VJPlayerEngine: NSObject {
     /// - Parameter value: 滑块值
     func sliderValueChanged(_ value: Float) {
 //        print("\(value) ===============")
-        let newTime = CMTime(seconds: Double(value), preferredTimescale: 600)
+        let newTime = CMTime(seconds: Double(value), preferredTimescale: 1000)
         print("滑块拖拽事件 time:\(value)")
         player.seek(to: newTime, toleranceBefore: .zero, toleranceAfter: .zero)
     }

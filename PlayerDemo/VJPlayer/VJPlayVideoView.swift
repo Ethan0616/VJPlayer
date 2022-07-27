@@ -257,8 +257,8 @@ extension VJPlayVideoView {
             self.surfaceDisplay.startTimeLabel.text = startText
         }
         
-        VJPlayerEngine.sliderPlayButtonImage = {[unowned self] (image : UIImage) in
-            self.surfaceDisplay.playBtn.setImage(image, for: .normal)
+        VJPlayerEngine.sliderPlayButtonImage = {[unowned self] (isPlay : Bool) in
+            self.surfaceDisplay.refreshButtonImage(isPlay)
         }
         
         surfaceDisplay.timeSlider.startDragging = {

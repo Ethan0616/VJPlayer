@@ -10,7 +10,7 @@ import AVFoundation
 
 public typealias SliderDisplaySetUp = (_ enable:Bool,_ currentValue:Float,_ startText:String,_ maxValue:Float,_ durationText:String) -> Void
 public typealias SliderDisplay = (_ currentValue : Float ,_ startText: String ) -> Void
-public typealias SliderButtonImage = (_ image: UIImage) -> Void
+public typealias SliderButtonImage = (_ isPlay: Bool) -> Void
 
 
 internal class VJPlayerEngine: NSObject {
@@ -125,7 +125,7 @@ internal class VJPlayerEngine: NSObject {
         switch player.timeControlStatus {
         case .playing:
             player.pause()
-            isPlaying = false
+            
         case .paused:
             let currentItem = player.currentItem
             if currentItem?.currentTime() == currentItem?.duration {
@@ -133,11 +133,11 @@ internal class VJPlayerEngine: NSObject {
                     
                 })
             }
-            isPlaying = true
+            
             player.play()
         default:
             player.pause()
-            isPlaying = false
+            
         }
     }
     
@@ -180,7 +180,7 @@ internal class VJPlayerEngine: NSObject {
     /// 正在播放中
     /// - Returns: true 正在播放中
     func currentlyPlaying() -> Bool{
-        return isPlaying
+        return self.player.timeControlStatus == .playing
     }
     
     /// 开始播放
@@ -337,18 +337,18 @@ extension VJPlayerEngine {
     
     /// Adjust the play/pause button image to reflect the current play state.
     func setPlayPauseButtonImage() {
-        var buttonImage: UIImage?
 
         switch self.player.timeControlStatus {
         case .playing:
-            buttonImage = UIImage(named: pauseButtonImageName)
+            
+            VJPlayerEngine.sliderPlayButtonImage(true)
         case .paused, .waitingToPlayAtSpecifiedRate:
-            buttonImage = UIImage(named: playButtonImageName)
+            
+            VJPlayerEngine.sliderPlayButtonImage(false)
         @unknown default:
-            buttonImage = UIImage(named: pauseButtonImageName)
+            
+            VJPlayerEngine.sliderPlayButtonImage(false)
         }
-        guard let image = buttonImage else { return }
-        VJPlayerEngine.sliderPlayButtonImage(image)
     }
     
     

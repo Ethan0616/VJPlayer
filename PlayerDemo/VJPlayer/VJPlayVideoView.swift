@@ -94,6 +94,7 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
         surfaceDisplay.closeBtn.addTarget(self, action: #selector(closeAction), for: .touchUpInside)
         addGusture()
         setUpAssets()
+        NotificationCenter.default.addObserver(self, selector: #selector(VJPlayVideoView.deviceOrientationDidChange) , name: UIDevice.orientationDidChangeNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(deviceOrientationDidChangeNotificationAction(_:)), name: UIApplication.didChangeStatusBarOrientationNotification, object: nil)
         if #available(iOS 13, *) {
             // 缺失iOS13以上监听屏幕旋转的方法
@@ -267,13 +268,12 @@ extension VJPlayVideoView {
         }
         
         surfaceDisplay.timeSlider.endDragging = { (slider : VJSlider) in
+            if slider.isDrag { return }
             print("拖拽结束=====================")
             print("添加监听")
-            
             DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 0.4) {
                 DispatchQueue.main.async {
                     print("添加监听===================== async")
-                    if slider.isDrag { return }
                     VJPlayerEngine.addPeriodicTimeObserver()
                     print("添加监听===================== 当前值\(slider.value)")
 
@@ -314,3 +314,52 @@ extension VJPlayVideoView {
     
 
 }
+
+// 用来记录这一次旋转到的状态，等旋转到最上面的时候可以计算清楚
+private var orientationTemp  : AVCaptureVideoOrientation = .portrait
+
+extension VJPlayVideoView {
+    
+    @objc fileprivate func deviceOrientationDidChange(){
+        let orientation : UIDeviceOrientation = UIDevice.current.orientation
+
+        // 方向旋转  对应的显示屏幕旋转 非录制输入屏幕方向
+        if orientation.isPortrait || orientation.isLandscape
+        {
+            var videoOrientation : AVCaptureVideoOrientation = .portrait
+            switch orientation {
+            case .landscapeLeft:
+                videoOrientation = .landscapeLeft
+                if orientationTemp == .portraitUpsideDown {
+                    layoutPlayerLayer()
+                }
+            case .landscapeRight:
+                videoOrientation = .landscapeRight
+                if orientationTemp == .portraitUpsideDown {
+                    layoutPlayerLayer()
+                }
+            case .faceUp:
+                videoOrientation = .portrait
+            case .faceDown:
+                videoOrientation = .portraitUpsideDown
+            case .portraitUpsideDown:
+                videoOrientation = .portraitUpsideDown
+            case .portrait:
+                videoOrientation = .portrait
+            case .unknown:
+                videoOrientation = .portrait
+            @unknown default:
+                fatalError()
+            }
+//            playerLayer?.connection?.videoOrientation = videoOrientation
+            orientationTemp = videoOrientation
+        }
+        
+    }
+    // 左右旋转到270度时，修正layer视图层大小
+    private func layoutPlayerLayer() {
+        playerView.frame = bounds
+    }
+    
+}
+

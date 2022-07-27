@@ -155,6 +155,7 @@ internal class VJPlayerEngine: NSObject {
     
     /// 播放器监听事件 (自动)
     func addPeriodicTimeObserver() {
+        if timeObserverToken != nil { return }
         print("将要添加监听====================")
         let interval = CMTime(value: 1, timescale: 2)
         timeObserverToken = player.addPeriodicTimeObserver(forInterval: interval,
@@ -169,13 +170,12 @@ internal class VJPlayerEngine: NSObject {
     // remove a registered time observer
     func removePeriodicTimeObserver() {
         // If a time observer exists, remove it
+        guard let timeObserverToken = timeObserverToken else { return }
         objc_sync_enter(self)
         print("将要移除observer==============")
-        if let timeObserverToken = timeObserverToken {
-            player.removeTimeObserver(timeObserverToken)
-            self.timeObserverToken = nil
-            print("移除监听完成====================")
-        }
+        player.removeTimeObserver(timeObserverToken)
+        self.timeObserverToken = nil
+        print("移除监听完成====================")
         objc_sync_exit(self)
     }
     

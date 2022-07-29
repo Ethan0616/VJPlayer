@@ -113,7 +113,6 @@ internal class VJPlayerEngine: NSObject {
         player = AVPlayer(playerItem: playerItem)
         removePlayer()
         let tempPlayerLayer = AVPlayerLayer(player: player)
-//        print(tempPlayerLayer)
         self.playerLayer = tempPlayerLayer
         closure(tempPlayerLayer)
         startPlay()
@@ -135,9 +134,6 @@ internal class VJPlayerEngine: NSObject {
                 if difValue >= 0 && difValue < 10 {
                     currentItem?.seek(to: .zero, completionHandler: { finsh in })
                 }
-                print(durationValue)
-                print(currentValue)
-                print(difValue)
             }
             
             player.play()
@@ -153,7 +149,7 @@ internal class VJPlayerEngine: NSObject {
     func sliderValueChanged(_ value: Float) {
 //        print("\(value) ===============")
         let newTime = CMTime(seconds: Double(value), preferredTimescale: 1000)
-        print("滑块拖拽事件 time:\(value)")
+//        print("滑块拖拽事件 time:\(value)")
         player.seek(to: newTime, toleranceBefore: .zero, toleranceAfter: .zero)
     }
     
@@ -161,13 +157,13 @@ internal class VJPlayerEngine: NSObject {
     /// 播放器监听事件 (自动)
     func addPeriodicTimeObserver() {
         if timeObserverToken != nil { return }
-        print("将要添加监听====================")
+//        print("将要添加监听====================")
         let interval = CMTime(value: 1, timescale: 2)
         timeObserverToken = player.addPeriodicTimeObserver(forInterval: interval,
                                                            queue: .main) { [unowned self] time in
             let timeElapsed = Float(time.seconds)
             let textStr = self.createTimeString(time: timeElapsed)
-            print("time监听事件 time:\(timeElapsed)")
+//            print("time监听事件 time:\(timeElapsed)")
             VJPlayerEngine.sliderDisplay(timeElapsed,textStr)
         }
     }
@@ -177,16 +173,17 @@ internal class VJPlayerEngine: NSObject {
         // If a time observer exists, remove it
         guard let timeObserverToken = timeObserverToken else { return }
         objc_sync_enter(self)
-        print("将要移除observer==============")
+//        print("将要移除observer==============")
         player.removeTimeObserver(timeObserverToken)
         self.timeObserverToken = nil
-        print("移除监听完成====================")
+//        print("移除监听完成====================")
         objc_sync_exit(self)
     }
     
     /// 正在播放中
     /// - Returns: true 正在播放中
     func currentlyPlaying() -> Bool{
+        print("currentlyPlaying\(self.player.timeControlStatus == .playing)")
         return self.player.timeControlStatus == .playing
     }
     
@@ -355,8 +352,8 @@ extension VJPlayerEngine {
             playAction?(false)
             VJPlayerEngine.sliderPlayButtonImage(false)
         case  .waitingToPlayAtSpecifiedRate:
-//            playAction?(false)
-            print(" .waitingToPlayAtSpecifiedRate")
+//            print(" .waitingToPlayAtSpecifiedRate")
+            break
         @unknown default:
             playAction?(false)
             VJPlayerEngine.sliderPlayButtonImage(false)

@@ -9,9 +9,10 @@ import UIKit
 import AVFoundation
 
 open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
-
+    
     fileprivate var imageFrame  : CGRect! = nil
-
+    fileprivate var hitTestCount : Int64 = 0
+    fileprivate var btnHitTestClick : Bool = false // flag
     private let displayHeight : CGFloat = 100   // 竖屏状态下 VJSurfaceDisplay 整体视图所占的高度
     private let displayLandscapeHeight : CGFloat = 44    // 横屏状态下 整体视图所占高度
     // MARK: UI
@@ -51,6 +52,7 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
         return btn
     }()
     fileprivate var isRemoveFromSuperView : Bool = false
+    
     
     fileprivate var callBack : (( _ index : Int)-> Void)? = nil
     
@@ -141,6 +143,13 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
         panGesture.cancelsTouchesInView = false
         panGesture.maximumNumberOfTouches = 1
         gustureView.addGestureRecognizer(panGesture)
+        
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(respondsToTapGesture(_:)))
+        gustureView.addGestureRecognizer(tapGesture)
+    }
+    
+    @objc func respondsToTapGesture(_ tap : UITapGestureRecognizer) {
+        surfaceDisplay.isHidden = !surfaceDisplay.isHidden
     }
     
     private func setUpAssets() {
@@ -166,19 +175,14 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
                 
                 let offSetX : CGFloat = VJPlayVideoView.originPoint.x - point.x
                 let offSetY : CGFloat = VJPlayVideoView.originPoint.y - point.y
-//                print(offSetY)
                 let proportion : Double = 1.0 - (abs(offSetY) / bounds.size.height) // 随着y轴变化  x轴不变
-//                print("\(proportion)")
                 playerView.bounds = CGRect(x: 0, y: 0, width:  bounds.size.width * proportion, height: bounds.size.height * proportion)
                 let maxCenterY =  bounds.size.height -  playerView.bounds.size.height * 0.5
                 let centerY = (center.y - offSetY) > maxCenterY ? maxCenterY :  (center.y - offSetY)
                 playerView.center = CGPoint(x: center.x - offSetX, y: centerY)
-//                print("修改前: width : \(bounds.size.width)  , height : \(bounds.size.height)")
-//                print("修改后: width : \(playerView.bounds.size.width)  , height : \(playerView.bounds.size.height)")
                 // 背景颜色
                 backgroundView.alpha = proportion  > 0.3 ? proportion : 0.3
             }
-//            print("changed")
         } else if pan.state == .cancelled || pan.state == .ended || pan.state == .recognized || pan.state == .failed {
             moveBegan(point) //  VJPlayVideoView.originPoint 可能为空
             let offSetY : CGFloat = VJPlayVideoView.originPoint.y - point.y
@@ -199,7 +203,7 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
                     }
                     self.backgroundView.alpha = 1
                 }else {
-                    print("缩小到视图中")
+//                    print("缩小到视图中")
                     self.isRemoveFromSuperView = true
                     self.playerView.frame = self.imageFrame
                     VJPlayerEngine.pause()
@@ -214,7 +218,6 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
                 }
             }
 //            videoView.center = CGPoint(x: view.center.x, y: view.center.y)
-            print("end")
         }
         
     }
@@ -239,6 +242,7 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
         self.surfaceDisplay.removeFromSuperview()
         self.playBtn.removeFromSuperview()
         imageFrame = nil
+        NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(hideSurfaceView), object: nil)
         self.removeFromSuperview()
     }
     
@@ -284,6 +288,7 @@ extension VJPlayVideoView {
         
         surfaceDisplay.timeSlider.startDragging = {[unowned self] in
            print("开始拖拽===================")
+            NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(hideSurfaceView), object: nil)
             VJPlayerEngine.removePeriodicTimeObserver()
             if !self.playBtn.isHidden { self.playBtn.isHidden = true }
         }
@@ -294,12 +299,12 @@ extension VJPlayVideoView {
                 self.playBtn.isHidden = false
             }
             print("拖拽结束=====================")
-            print("添加监听")
+//            print("添加监听")
             DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 0.4) {
                 DispatchQueue.main.async {
-                    print("添加监听===================== async")
+//                    print("添加监听===================== async")
                     VJPlayerEngine.addPeriodicTimeObserver()
-                    print("添加监听===================== 当前值\(slider.value)")
+//                    print("添加监听===================== 当前值\(slider.value)")
 
                 }
             }
@@ -319,11 +324,40 @@ extension VJPlayVideoView {
         surfaceDisplay.refreshButtonImage(isPlaying)
         playBtn.isHidden = isPlaying
     }
+    private func addHiddenAction() {
+        // 取消上一次的隐藏事件
+        NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(hideSurfaceView), object: nil)
+        
+        // 获取播放状态 hittest 比btn 优先响应 。所以播放状态还未切换，此时获取到的是改变前的播放状态
+        var isPlaying : Bool = VJPlayerEngine.currentlyPlaying()
+        print("\(btnHitTestClick) ====================")
+        print("\(isPlaying) ====================")
+        if btnHitTestClick == true {
+            print("btnHitTestClick")
+            btnHitTestClick = false
+            isPlaying = !isPlaying
+        }
+        print("当前播放状态是\(isPlaying)")
+        // 添加自动隐藏事件
+        if isPlaying {
+            print("添加自动隐藏事件")
+            let interval = TimeInterval(3)
+            perform(#selector(hideSurfaceView), with: nil, afterDelay: interval)
+        }
+    }
+    
+    @objc func hideSurfaceView() {
+        if VJPlayerEngine.currentlyPlaying() {
+            surfaceDisplay.isHidden = true
+        }
+    }
     
     @objc func closeAction() {
 
+        self.playBtn.isHidden = true
+        self.isRemoveFromSuperView = true
+        self.surfaceDisplay.isHidden = true
         UIView.animate(withDuration: 0.3) {
-            print("缩小到视图中")
             self.playerView.frame = self.imageFrame
             VJPlayerEngine.pause()
         } completion: { _ in
@@ -347,11 +381,11 @@ extension VJPlayVideoView {
         togglePlay()
         button.isHidden = true
     }
+    
 }
 
 // 用来记录这一次旋转到的状态，等旋转到最上面的时候可以计算清楚
 private var orientationTemp  : AVCaptureVideoOrientation = .portrait
-
 extension VJPlayVideoView {
     
     @objc fileprivate func deviceOrientationDidChange(){
@@ -395,5 +429,40 @@ extension VJPlayVideoView {
         playerView.frame = bounds
     }
     
+    open override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        
+        if isUserInteractionEnabled == false ||
+            isHidden == true ||
+            alpha <= 0.01  {
+            return nil
+        }
+        guard self.point(inside: point, with: event) else { return nil}
+
+        var touchScreen : Bool = false
+        if hitTestCount == 1 {
+            print("点击了屏幕")
+            addHiddenAction()
+            hitTestCount = 0
+            touchScreen = true
+            btnHitTestClick = false
+        } else {
+            hitTestCount += 1
+        }
+
+        for aView  in subviews.reversed() {
+            let nView : UIView? = aView.hitTest(convert(point, to: aView), with: event)
+            if let aView : UIView = nView {
+                if touchScreen &&
+                    (aView == self.playBtn ||
+                     aView == surfaceDisplay.playBtn) {
+                    print("点击了播放按钮")
+                    btnHitTestClick = true
+                }
+                return aView
+            }
+        }
+
+        return self
+    }
 }
 

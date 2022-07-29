@@ -31,6 +31,7 @@ internal class VJPlayerEngine: NSObject {
     public static var sliderDisplaySetUp : SliderDisplaySetUp! = nil
     public static var sliderDisplay : SliderDisplay! = nil
     public static var sliderPlayButtonImage : SliderButtonImage! = nil
+    public var playAction : ((Bool)->Void)? = nil
 
     private var timeObserverToken: Any?
     private var playerItemStatusObserver: NSKeyValueObservation?
@@ -125,14 +126,13 @@ internal class VJPlayerEngine: NSObject {
         switch player.timeControlStatus {
         case .playing:
             player.pause()
-            
+            playAction?(false)
         case .paused:
             let currentItem = player.currentItem
-            // 10 为阀值，可适当放宽
             // 修复了当滑块拖拽到影片结束，需要连续点击两次才能再次播放的bug
             if let durationValue = currentItem?.duration.value, let currentValue = currentItem?.currentTime().value  {
                 let difValue = durationValue - currentValue
-                if 0 == difValue {
+                if difValue >= 0 && difValue < 10 {
                     currentItem?.seek(to: .zero, completionHandler: { finsh in })
                 }
                 print(durationValue)
@@ -141,9 +141,10 @@ internal class VJPlayerEngine: NSObject {
             }
             
             player.play()
+            playAction?(true)
         default:
             player.pause()
-            
+            playAction?(true)
         }
     }
     
@@ -348,16 +349,16 @@ extension VJPlayerEngine {
 
         switch self.player.timeControlStatus {
         case .playing:
-            
+            playAction?(true)
             VJPlayerEngine.sliderPlayButtonImage(true)
         case .paused:
-            
+            playAction?(false)
             VJPlayerEngine.sliderPlayButtonImage(false)
         case  .waitingToPlayAtSpecifiedRate:
-            
+//            playAction?(false)
             print(" .waitingToPlayAtSpecifiedRate")
         @unknown default:
-            
+            playAction?(false)
             VJPlayerEngine.sliderPlayButtonImage(false)
         }
     }

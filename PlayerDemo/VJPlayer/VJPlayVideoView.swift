@@ -42,6 +42,15 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
         aView.backgroundColor = UIColor.clear
         return aView
     }()
+    // 最中间的播放按钮
+    fileprivate var playBtn : UIButton = {
+        let btn = UIButton(type: .custom)
+        btn.setImage(UIImage.resource("play_large"), for: .normal)
+        btn.frame = CGRect(x: 0, y: 0, width: 100, height: 100)
+        btn.isHidden = true
+        return btn
+    }()
+    fileprivate var isRemoveFromSuperView : Bool = false
     
     fileprivate var callBack : (( _ index : Int)-> Void)? = nil
     
@@ -60,6 +69,7 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
         frame = UIScreen.main.bounds
         backgroundView.frame = bounds
         gustureView.frame = bounds
+        playBtn.center = center
         if !UIWindow.isLandscape() {
             surfaceDisplay.frame = CGRect(x: 0, y:bounds.height - displayHeight - UIWindow.safeBottom, width: bounds.width, height: displayHeight)
         } else {
@@ -87,11 +97,13 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
         addSubview(playerView)
         addSubview(gustureView)
         addSubview(surfaceDisplay)
+        addSubview(playBtn)
         surfaceDisplay.setButtonImage(btns)
         addBtnTarget()
         surfaceDisplay.timeSlider.addTarget(self, action: #selector(timeSliderDidChange(_:)), for: .valueChanged)
         surfaceDisplay.playBtn.addTarget(self, action: #selector(togglePlay), for: .touchUpInside)
         surfaceDisplay.closeBtn.addTarget(self, action: #selector(closeAction), for: .touchUpInside)
+        playBtn.addTarget(self, action: #selector(playBtnAction(_:)), for: .touchUpInside)
         addGusture()
         setUpAssets()
         NotificationCenter.default.addObserver(self, selector: #selector(VJPlayVideoView.deviceOrientationDidChange) , name: UIDevice.orientationDidChangeNotification, object: nil)
@@ -182,9 +194,13 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
                 if isHiddenVideoView {
                     self.playerView.frame = self.frame
                     self.surfaceDisplay.isHidden = false
+                    if !VJPlayerEngine.currentlyPlaying() {
+                        self.playBtn.isHidden = false
+                    }
                     self.backgroundView.alpha = 1
                 }else {
                     print("缩小到视图中")
+                    self.isRemoveFromSuperView = true
                     self.playerView.frame = self.imageFrame
                     VJPlayerEngine.pause()
                 }
@@ -193,6 +209,8 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
                 VJPlayVideoView.isPortrait = true
                 if !isHiddenVideoView {
                     self.resourceRelease()
+                } else {
+                    self.isRemoveFromSuperView = false
                 }
             }
 //            videoView.center = CGPoint(x: view.center.x, y: view.center.y)
@@ -206,6 +224,7 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
         if VJPlayVideoView.originPoint == nil {
             VJPlayVideoView.originPoint = point
             surfaceDisplay.isHidden = true
+            self.playBtn.isHidden = true
         }
     }
     
@@ -218,6 +237,7 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
         self.playerView.removeFromSuperview()
         self.surfaceDisplay.resourceRelease()
         self.surfaceDisplay.removeFromSuperview()
+        self.playBtn.removeFromSuperview()
         imageFrame = nil
         self.removeFromSuperview()
     }
@@ -262,13 +282,17 @@ extension VJPlayVideoView {
             self.surfaceDisplay.refreshButtonImage(isPlay)
         }
         
-        surfaceDisplay.timeSlider.startDragging = {
+        surfaceDisplay.timeSlider.startDragging = {[unowned self] in
            print("开始拖拽===================")
             VJPlayerEngine.removePeriodicTimeObserver()
+            if !self.playBtn.isHidden { self.playBtn.isHidden = true }
         }
         
-        surfaceDisplay.timeSlider.endDragging = { (slider : VJSlider) in
+        surfaceDisplay.timeSlider.endDragging = {[unowned self] (slider : VJSlider) in
             if slider.isDrag { return }
+            if !VJPlayerEngine.currentlyPlaying() {
+                self.playBtn.isHidden = false
+            }
             print("拖拽结束=====================")
             print("添加监听")
             DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 0.4) {
@@ -281,12 +305,19 @@ extension VJPlayVideoView {
             }
         }
         
+        VJPlayerEngine.shared().playAction = {[unowned self] (play : Bool) in
+            if isRemoveFromSuperView { return }
+            self.playBtn.isHidden = play
+        }
+        
     }
     
     /// 播放暂停切换事件
     @objc func togglePlay() {
         VJPlayerEngine.togglePlay()
-        surfaceDisplay.refreshButtonImage(VJPlayerEngine.currentlyPlaying())
+        let isPlaying = VJPlayerEngine.currentlyPlaying()
+        surfaceDisplay.refreshButtonImage(isPlaying)
+        playBtn.isHidden = isPlaying
     }
     
     @objc func closeAction() {
@@ -312,7 +343,10 @@ extension VJPlayVideoView {
         VJPlayerEngine.sliderValueChanged(sender.value)
     }
     
-
+    @objc func playBtnAction(_ button : UIButton) {
+        togglePlay()
+        button.isHidden = true
+    }
 }
 
 // 用来记录这一次旋转到的状态，等旋转到最上面的时候可以计算清楚

@@ -130,10 +130,14 @@ internal class VJPlayerEngine: NSObject {
             let currentItem = player.currentItem
             // 10 为阀值，可适当放宽
             // 修复了当滑块拖拽到影片结束，需要连续点击两次才能再次播放的bug
-            if let durationValue = currentItem?.duration.value, let currentValue = currentItem?.currentTime().value , durationValue - currentValue < 10 {
-                currentItem?.seek(to: .zero, completionHandler: { finsh in
-                    
-                })
+            if let durationValue = currentItem?.duration.value, let currentValue = currentItem?.currentTime().value  {
+                let difValue = durationValue - currentValue
+                if 0 == difValue {
+                    currentItem?.seek(to: .zero, completionHandler: { finsh in })
+                }
+                print(durationValue)
+                print(currentValue)
+                print(difValue)
             }
             
             player.play()

@@ -8,7 +8,20 @@
 import UIKit
 import AVFoundation
 
+@objc
+public enum VJWatermarkType : Int {
+    case topLeft
+    case topRight
+    case bottomLeft
+    case bottomRight
+}
+
+
 open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
+    // 水印位置
+    var position : VJWatermarkType = .topRight
+    var leftRightMargin : CGFloat = 20.0  // 距离左右边距
+    var topBottomMargin : CGFloat = 10.0  // 上下边距
     
     fileprivate var imageFrame  : CGRect! = nil
     fileprivate var hitTestCount : Int64 = 0
@@ -19,21 +32,28 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
     // 视图顺序，自下而上
     // 蒙版
     fileprivate var backgroundView : UIView = {
-        let aView = UIView(frame: UIScreen.main.bounds)
+        let aView = UIView(frame: UIWindow.mainScreen)
         aView.backgroundColor = UIColor.black
         aView.alpha = 1
         return aView
     }()
     // 视频播放器
     fileprivate var playerView  : VJPlayerView = {
-        let aView = VJPlayerView(frame: UIScreen.main.bounds)
+        let aView = VJPlayerView(frame: UIWindow.mainScreen)
         aView.backgroundColor = UIColor.clear
+        return aView
+    }()
+    // 水印视图
+    public var watermarkView : UIView = {
+        let aView = UIView(frame: CGRect.zero)
+        aView.backgroundColor = UIColor.clear
+        aView.clipsToBounds = true
         return aView
     }()
     // 手势视图
     fileprivate var gustureView : UIView = {
         let aView = UIView()
-        aView.frame = UIScreen.main.bounds
+        aView.frame = UIWindow.mainScreen
         aView.backgroundColor = UIColor.clear
         return aView
     }()
@@ -68,7 +88,8 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
     
     open override func layoutSubviews() {
         super.layoutSubviews()
-        frame = UIScreen.main.bounds
+        frame = UIWindow.mainScreen
+        resetWatermarkViewFrame()
         backgroundView.frame = bounds
         gustureView.frame = bounds
         playBtn.center = center
@@ -78,6 +99,7 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
             surfaceDisplay.frame = CGRect(x: 0, y:bounds.height - displayLandscapeHeight - UIWindow.safeBottom, width: bounds.width, height: displayLandscapeHeight)
         }
     }
+    
     
     deinit {
         NotificationCenter.default.removeObserver(self)
@@ -90,13 +112,14 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
     ///   - btns: 其他按钮的资源图片名称
     ///   - closure: 按钮点击回调
     convenience init(controller : UIViewController?,view : UIView?,btns: Array<String>,closure : @escaping (_ index : Int) -> Void) {
-        self.init(frame: controller?.view.frame ?? UIScreen.main.bounds)
+        self.init(frame: controller?.view.frame ?? UIWindow.mainScreen)
         let btnFrame = view?.superview?.convert(view!.frame, to: controller?.view)
         imageFrame = btnFrame
         controller?.view.addSubview(self)
         callBack = closure
         addSubview(backgroundView)
         addSubview(playerView)
+        addSubview(watermarkView)
         addSubview(gustureView)
         addSubview(surfaceDisplay)
         addSubview(playBtn)
@@ -113,6 +136,53 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
         if #available(iOS 13, *) {
             // 缺失iOS13以上监听屏幕旋转的方法
         } else {
+        }
+        VJPlayerEngine.resetVideoSize = {
+            self.resetWatermarkViewFrame()
+        }
+    }
+    
+    private func resetWatermarkViewFrame() {
+        let videoSize = VJPlayerEngine.shared().videoSize
+        guard videoSize.width > 0 && videoSize.height > 0  else { return }
+        let screenSize = UIWindow.mainScreen
+        // 以width比例为准
+        if screenSize.width / videoSize.width < screenSize.height / videoSize.height {
+            let ratio = screenSize.width / videoSize.width
+            let height = videoSize.height * ratio
+            watermarkView.frame = CGRect(x: 0, y: (screenSize.height - height) * 0.5 , width: screenSize.width, height: height)
+        }else {
+            // 以height比例为准
+            let ratio = screenSize.height / videoSize.height
+            let width = videoSize.width * ratio
+            watermarkView.frame = CGRect(x: (screenSize.width - width) * 0.5, y: 0, width: width, height: screenSize.height)
+        }
+        layoutWatermarkSubview()
+    }
+    
+    private func layoutWatermarkSubview() {
+        guard watermarkView.subviews.count > 0 else { return }
+        if watermarkView.subviews.count > 1 {
+            print("水印视图过多，请检查！！！")
+        }
+        watermarkView.subviews.forEach { view in
+            view.sizeToFit()
+            let size = view.bounds.size
+            let superViewSize = watermarkView.bounds.size
+            switch position {
+                case .topLeft:
+                view.frame = CGRect(x: leftRightMargin, y: topBottomMargin, width: size.width, height: size.height)
+                    break
+                case .topRight:
+                view.frame = CGRect(x: superViewSize.width - size.width - leftRightMargin, y: topBottomMargin, width: size.width, height: size.height)
+                    break
+                case .bottomLeft:
+                view.frame = CGRect(x: leftRightMargin, y: superViewSize.height - size.height - topBottomMargin, width: size.width, height: size.height)
+                    break
+                case .bottomRight:
+                view.frame = CGRect(x: superViewSize.width - size.width - leftRightMargin, y: superViewSize.height - size.height - topBottomMargin, width: size.width, height: size.height)
+                    break
+            }
         }
     }
     
@@ -182,6 +252,8 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
                 playerView.center = CGPoint(x: center.x - offSetX, y: centerY)
                 // 背景颜色
                 backgroundView.alpha = proportion  > 0.3 ? proportion : 0.3
+                watermarkView.alpha = 0
+                playBtn.alpha = 0
             }
         } else if pan.state == .cancelled || pan.state == .ended || pan.state == .recognized || pan.state == .failed {
             moveBegan(point) //  VJPlayVideoView.originPoint 可能为空
@@ -202,6 +274,8 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
                         self.playBtn.isHidden = false
                     }
                     self.backgroundView.alpha = 1
+                    self.watermarkView.alpha = 1
+                    self.playBtn.alpha = 1
                 }else {
 //                    print("缩小到视图中")
                     self.isRemoveFromSuperView = true
@@ -238,6 +312,8 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
         self.backgroundView.removeFromSuperview()
         self.gustureView.removeFromSuperview()
         self.playerView.removeFromSuperview()
+        self.watermarkView.subviews.forEach{$0.removeFromSuperview()}
+        self.watermarkView.removeFromSuperview()
         self.surfaceDisplay.resourceRelease()
         self.surfaceDisplay.removeFromSuperview()
         self.playBtn.removeFromSuperview()

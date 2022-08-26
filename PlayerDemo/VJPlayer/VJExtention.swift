@@ -10,6 +10,42 @@ import UIKit
 
 internal extension UIWindow {
     
+    static var mainScreen : CGRect {
+        return keyWindow.bounds
+    }
+    
+    static var keyWindow: UIWindow {
+        if #available(iOS 13, *) {
+            let keyWindow : UIWindow  = UIApplication.shared.connectedScenes
+                .map{$0 as? UIWindowScene}
+                .compactMap{$0}
+                .first?.windows.first ?? UIWindow()
+//            return UIApplication.shared.windows.first { $0.isKeyWindow }
+            return keyWindow
+        } else {
+            return UIApplication.shared.keyWindow ?? UIWindow()
+        }
+    }
+    
+    static func isBangsScreen() ->Bool {
+        let keyWindow = keyWindow
+        if #available(iOS 11.0, *) {
+            return keyWindow.safeAreaInsets.bottom > 0
+        } else {
+            // Fallback on earlier versions
+        }
+        return false
+    }
+    
+    static var safeBottom : CGFloat {
+        if #available(iOS 11.0, *) {
+            return keyWindow.safeAreaInsets.bottom
+        } else {
+            // Fallback on earlier versions
+        }
+        return 0
+    }
+    
     static func isLandscape() -> Bool {
         if #available(iOS 13, *) {
 
@@ -31,21 +67,12 @@ internal extension UIWindow {
             let keyWindow : UIWindow  = UIApplication.shared.connectedScenes
                 .map{$0 as? UIWindowScene}
                 .compactMap{$0}
-                .first?.windows.first ?? UIWindow(frame: UIScreen.main.bounds)
+                .first?.windows.first ?? UIWindow(frame: mainScreen)
 //            return UIApplication.shared.windows.first { $0.isKeyWindow }
             return keyWindow
         } else {
             return UIApplication.shared.keyWindow
         }
-    }
-    
-    static func isBangsScreen() ->Bool {
-        let keyWindow = UIWindow.key
-        return keyWindow!.safeAreaInsets.bottom > 0
-    }
-    
-    static var safeBottom : CGFloat {
-        return key?.safeAreaInsets.bottom ?? 0
     }
 }
 

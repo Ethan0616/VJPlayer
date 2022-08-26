@@ -52,6 +52,10 @@ class CustomTableViewCell: UITableViewCell {
             }
             // 唤起页面 核心代码
             videoView.showVideo(urlPath)
+            videoView.position = .bottomRight
+            let waterView = UIView(frame: CGRect(x: 0, y: 0, width: 120, height: 44))
+            waterView.backgroundColor = UIColor.green
+            videoView.watermarkView.addSubview(waterView)
         }
     }
 }

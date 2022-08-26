@@ -14,7 +14,8 @@ public typealias SliderButtonImage = (_ isPlay: Bool) -> Void
 
 
 internal class VJPlayerEngine: NSObject {
-
+    public var videoSize : CGSize = CGSize.zero
+    public static var resetVideoSize :(()-> Void )! = nil // 获取到视频尺寸的回调
     fileprivate var playValue : Float = -1
     fileprivate var isPlaying : Bool = false
     fileprivate weak var playerLayer : AVPlayerLayer? = nil
@@ -98,6 +99,7 @@ internal class VJPlayerEngine: NSObject {
     /// 退出播放器
     static func exitPlayback() {
         engine.exitPlayback()
+        VJPlayerEngine.shared().videoSize = CGSize.zero
     }
     
     
@@ -233,7 +235,8 @@ extension VJPlayerEngine {
         
         let assetKeysRequiredToPlay = [
             "playable",
-            "hasProtectedContent"
+            "hasProtectedContent",
+            "tracks"
         ]
         
         newAsset.loadValuesAsynchronously(forKeys: assetKeysRequiredToPlay) {
@@ -246,6 +249,22 @@ extension VJPlayerEngine {
                     self.setupPlayerObservers()
                     self.playerLayer?.player = self.player
                     self.player.replaceCurrentItem(with: AVPlayerItem(asset: newAsset))
+                }
+                if newAsset.isPlayable {
+                    for  track in newAsset.tracks {
+                        //  视轨
+                        if track.mediaType.rawValue == "vide" &&
+                            track.naturalSize.width > 0 &&
+                            track.naturalSize.height > 0  {
+                            
+                            self.videoSize = track.naturalSize
+                            if let block = VJPlayerEngine.resetVideoSize {
+                                block()
+                            }
+//                            print("\(track.naturalSize)")
+//                            print("width : \(UIWindow.mainScreen.size.width) height: \(UIWindow.mainScreen.size.height)")
+                        }
+                    }
                 }
             }
         }

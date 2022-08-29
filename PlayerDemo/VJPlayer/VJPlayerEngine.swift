@@ -205,6 +205,7 @@ internal class VJPlayerEngine: NSObject {
     /// 正在播放中
     /// - Returns: true 正在播放中
     func currentlyPlaying() -> Bool{
+        if player == nil { return false }
         print("currentlyPlaying\(self.player.timeControlStatus == .playing)")
         return self.player.timeControlStatus == .playing
     }
@@ -234,10 +235,6 @@ internal class VJPlayerEngine: NSObject {
     /// 释放内存
     private func resourceRelease() {
         removePeriodicTimeObserver()
-        player = nil
-        playerItem = nil
-        url = nil
-        
         videoSize = CGSize.zero
         startTime  = -1
         currentTime  = 0

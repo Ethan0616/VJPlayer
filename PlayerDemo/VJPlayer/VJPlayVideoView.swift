@@ -332,7 +332,7 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
     
     /// 退出时释放资源
     private func resourceRelease() {
-
+        NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(hideSurfaceView), object: nil)
         self.playFinished()
         VJPlayerEngine.exitPlayback()
         self.backgroundView.removeFromSuperview()
@@ -344,7 +344,6 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
         self.surfaceDisplay.removeFromSuperview()
         self.playBtn.removeFromSuperview()
         imageFrame = nil
-        NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(hideSurfaceView), object: nil)
         self.removeFromSuperview()
     }
     

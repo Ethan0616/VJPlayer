@@ -56,6 +56,9 @@ class CustomTableViewCell: UITableViewCell {
             let waterView = UIView(frame: CGRect(x: 0, y: 0, width: 120, height: 44))
             waterView.backgroundColor = UIColor.green
             videoView.watermarkView.addSubview(waterView)
+            videoView.finishBlock = { (totalTime,currentTime) in
+                print("总共播放时间:\(totalTime)秒 \n 视频播放到第:\(currentTime)秒")
+            }
         }
     }
 }

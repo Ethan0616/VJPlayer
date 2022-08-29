@@ -18,11 +18,19 @@ public enum VJWatermarkType : Int {
 
 
 open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
+
+    // MARK: Public
     // 水印位置
     var position : VJWatermarkType = .topRight
     var leftRightMargin : CGFloat = 20.0  // 距离左右边距
     var topBottomMargin : CGFloat = 10.0  // 上下边距
+    /// 回调函数的返回类型
+    public typealias FinishBlock = (_ totalTime : Float,_ currentTime : Float) -> Void
+    /// 播放完成的回调
+    public var finishBlock : FinishBlock? = nil
     
+    
+    // MARK: Private
     fileprivate var imageFrame  : CGRect! = nil
     fileprivate var hitTestCount : Int64 = 0
     fileprivate var btnHitTestClick : Bool = false // flag
@@ -74,7 +82,23 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
     fileprivate var isRemoveFromSuperView : Bool = false
     
     
-    fileprivate var callBack : (( _ index : Int)-> Void)? = nil
+    fileprivate var callBack : (( _ index : Int)-> Void)! = nil
+    
+    /// 播放完成回调
+    /// - Parameter finishBlock: 当前播放时长
+    private func playFinished() {
+        var total : Float = 0
+        for (startTime , endTime) in  VJPlayerEngine.shared().totalTime {
+            let value = endTime - startTime
+            if value > 0 {
+                total += value
+            }
+        }
+        if let block : FinishBlock = finishBlock {
+            block(total,VJPlayerEngine.shared().currentTime)
+        }
+    }
+    
     
     override init(frame: CGRect) {
         super.init(frame : frame)
@@ -208,7 +232,7 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
         }
     }
     
-    func addGusture() {
+    private func addGusture() {
         let panGesture = UIPanGestureRecognizer(target: self, action: #selector(respondsToPanGesture(_:)))
         panGesture.cancelsTouchesInView = false
         panGesture.maximumNumberOfTouches = 1
@@ -229,7 +253,7 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
     
     private static var originPoint : CGPoint!
     private static var  isPortrait : Bool = true // 手势向上
-    @objc func respondsToPanGesture(_ pan:UIPanGestureRecognizer) {
+    @objc private func respondsToPanGesture(_ pan:UIPanGestureRecognizer) {
         
         let point = pan.location(in: gustureView)
 //        print("x = \(point.x),y = \(point.y)")
@@ -276,6 +300,7 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
                     self.backgroundView.alpha = 1
                     self.watermarkView.alpha = 1
                     self.playBtn.alpha = 1
+                    self.addHiddenAction()
                 }else {
 //                    print("缩小到视图中")
                     self.isRemoveFromSuperView = true
@@ -308,6 +333,7 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
     /// 退出时释放资源
     private func resourceRelease() {
 
+        self.playFinished()
         VJPlayerEngine.exitPlayback()
         self.backgroundView.removeFromSuperview()
         self.gustureView.removeFromSuperview()
@@ -376,6 +402,7 @@ extension VJPlayVideoView {
             }
             print("拖拽结束=====================")
 //            print("添加监听")
+            self.addHiddenAction()
             DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 0.4) {
                 DispatchQueue.main.async {
 //                    print("添加监听===================== async")
@@ -400,6 +427,7 @@ extension VJPlayVideoView {
         surfaceDisplay.refreshButtonImage(isPlaying)
         playBtn.isHidden = isPlaying
     }
+    // 添加按钮点击事件，自动隐藏底部视图
     private func addHiddenAction() {
         // 取消上一次的隐藏事件
         NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(hideSurfaceView), object: nil)

@@ -16,7 +16,9 @@ public typealias SliderButtonImage = (_ isPlay: Bool) -> Void
 internal class VJPlayerEngine: NSObject {
     public var videoSize : CGSize = CGSize.zero
     public static var resetVideoSize :(()-> Void )! = nil // 获取到视频尺寸的回调
-    fileprivate var playValue : Float = -1
+    private var startTime : Float = -1  // 开始时间
+    var currentTime : Float = 0    // 最后结束时间
+    var totalTime : [(startTime: Float,endTime : Float)] = [] // 共用时 [(开始时间,结束时间)]
     fileprivate var isPlaying : Bool = false
     fileprivate weak var playerLayer : AVPlayerLayer? = nil
     fileprivate var player      : AVPlayer!
@@ -109,7 +111,6 @@ internal class VJPlayerEngine: NSObject {
         // 设置静音模式下播放
 //        let avSession = AVAudioSession.sharedInstance()
 //        try! avSession.setCategory(.playback)
-        
         self.url = url
         playerItem  = AVPlayerItem(url: url )
         player = AVPlayer(playerItem: playerItem)
@@ -165,7 +166,26 @@ internal class VJPlayerEngine: NSObject {
                                                            queue: .main) { [unowned self] time in
             let timeElapsed = Float(time.seconds)
             let textStr = self.createTimeString(time: timeElapsed)
-//            print("time监听事件 time:\(timeElapsed)")
+//            print("time监听事件 timeElapsed:\(timeElapsed)")
+//            print("time监听事件 ============tempTime:\(tempTime)")
+            let absValue =  abs(timeElapsed - currentTime)
+            if startTime != -1 && absValue > 1.1 {
+//                print("==============================差值:\(abs(timeElapsed - tempTime))")
+                currentTime = timeElapsed
+                startTime = -1
+            }
+            if startTime == -1 {
+                startTime = timeElapsed
+                let timeTuple : (Float,Float) = (startTime,currentTime)
+                totalTime.append(timeTuple)
+            } else {
+
+                let startTime : Float =  totalTime.last?.startTime  ?? 0
+                let tmpTuple = (startTime,timeElapsed)
+                totalTime.removeLast()
+                totalTime.append(tmpTuple)
+                currentTime = timeElapsed
+            }
             VJPlayerEngine.sliderDisplay(timeElapsed,textStr)
         }
     }
@@ -217,6 +237,22 @@ internal class VJPlayerEngine: NSObject {
         player = nil
         playerItem = nil
         url = nil
+        
+        videoSize = CGSize.zero
+        startTime  = -1
+        currentTime  = 0
+        totalTime  = []
+        isPlaying  = false
+        playerLayer = nil
+        player = nil
+        playerItem  = nil
+        url = nil
+        playAction = nil
+
+        VJPlayerEngine.sliderDisplaySetUp  = nil
+        VJPlayerEngine.resetVideoSize = nil // 获取到视频尺寸的回调
+        VJPlayerEngine.sliderDisplay  = nil
+        VJPlayerEngine.sliderPlayButtonImage  = nil
     }
     
     @objc private func removePlayer(){

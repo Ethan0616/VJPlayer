@@ -31,7 +31,12 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
     
     
     // MARK: Private
-    fileprivate var imageFrame  : CGRect! = nil
+    private func imageFrame() -> CGRect {
+        if vc == nil || imageView == nil {return CGRect.zero}
+        let btnFrame = imageView?.superview?.convert(imageView!.frame, to: vc?.view)
+        if btnFrame == nil {return CGRect.zero}
+        return btnFrame!
+    }
     fileprivate var hitTestCount : Int64 = 0
     fileprivate var btnHitTestClick : Bool = false // flag
     private let displayHeight : CGFloat = 100   // 竖屏状态下 VJSurfaceDisplay 整体视图所占的高度
@@ -129,6 +134,9 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
         NotificationCenter.default.removeObserver(self)
     }
     
+    private weak var imageView : UIView! = nil
+    private weak var vc : UIViewController! = nil
+    
     /// 初始化方法
     /// - Parameters:
     ///   - controller: 控制器
@@ -137,8 +145,8 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
     ///   - closure: 按钮点击回调
     convenience init(controller : UIViewController?,view : UIView?,btns: Array<String>,closure : @escaping (_ index : Int) -> Void) {
         self.init(frame: controller?.view.frame ?? UIWindow.mainScreen)
-        let btnFrame = view?.superview?.convert(view!.frame, to: controller?.view)
-        imageFrame = btnFrame
+        imageView = view
+        vc = controller
         controller?.view.addSubview(self)
         callBack = closure
         addSubview(backgroundView)
@@ -304,7 +312,7 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
                 }else {
 //                    print("缩小到视图中")
                     self.isRemoveFromSuperView = true
-                    self.playerView.frame = self.imageFrame
+                    self.playerView.frame = self.imageFrame()
                     VJPlayerEngine.pause()
                 }
             } completion: { _ in
@@ -343,7 +351,6 @@ open class VJPlayVideoView: UIView , UIGestureRecognizerDelegate{
         self.surfaceDisplay.resourceRelease()
         self.surfaceDisplay.removeFromSuperview()
         self.playBtn.removeFromSuperview()
-        imageFrame = nil
         self.removeFromSuperview()
     }
     
@@ -461,7 +468,7 @@ extension VJPlayVideoView {
         self.isRemoveFromSuperView = true
         self.surfaceDisplay.isHidden = true
         UIView.animate(withDuration: 0.3) {
-            self.playerView.frame = self.imageFrame
+            self.playerView.frame = self.imageFrame()
             VJPlayerEngine.pause()
         } completion: { _ in
             VJPlayVideoView.originPoint = nil
